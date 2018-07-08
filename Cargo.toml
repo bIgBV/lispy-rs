@@ -1,0 +1,8 @@
+[package]
+name = "lispy"
+version = "0.1.0"
+authors = ["bvoleti"]
+
+[dependencies]
+rustyline = "1.0.0"
+nom = "4.0"
