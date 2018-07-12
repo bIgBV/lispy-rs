@@ -1,0 +1,26 @@
+use std::str::FromStr;
+use ast::{Expr, Lispy, Operator, Number};
+
+grammar;
+
+pub Lispy: Lispy = {
+    Op Expr+ => Lispy::Terms(<>)
+};
+
+Expr: Box<Expr> = {
+    Num => Box::new(Expr::Val(<>)),
+    "(" <o:Op> <e:Expr+> ")" => Box::new(Expr::Group(o, e))
+};
+
+Op: Operator = {
+    "+" => Operator::Add,
+    "=" => Operator::Sub,
+    "*" => Operator::Mul,
+    "/" => Operator::Div,
+    "%" => Operator::Mod,
+};
+
+Num: f64 = {
+    r"[0-9]+\.[0-9]+" => f64::from_str(<>).unwrap(),
+    r"[0-9]+" => f64::from_str(<>).unwrap()
+};

@@ -1,0 +1,12 @@
+[package]
+name = "syntax"
+version = "0.1.0"
+authors = ["Bhargav Voleti <bhargav.voleti932@gmail.com>"]
+build = "build.rs"
+
+[build-dependencies]
+lalrpop = "0.15.2"
+
+[dependencies]
+lalrpop-util = {git = "https://github.com/lalrpop/lalrpop", branch="master"}
+regex = "1.0.1"

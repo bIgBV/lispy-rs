@@ -1,6 +1,11 @@
 extern crate rustyline;
+
 #[macro_use]
-extern crate nom;
+extern crate lalrpop_util;
+
+lalrpop_mod!(pub grammar);
+
+pub mod grammar;
 
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
