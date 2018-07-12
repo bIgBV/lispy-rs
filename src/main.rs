@@ -1,16 +1,31 @@
-extern crate rustyline;
-
-#[macro_use]
 extern crate lalrpop_util;
-
-lalrpop_mod!(pub grammar);
-
-pub mod grammar;
+extern crate rustyline;
+extern crate syntax;
 
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
-mod parser;
+use syntax::Lispy;
+use syntax::Parser;
+
+fn parse_input(input: &str) -> Result<Lispy, String> {
+    match Parser::new().parse(input) {
+        Ok(v) => Ok(v),
+        Err(e) => Err(format!("Parse error: {:?}", e)),
+    }
+}
+
+fn read_input(rl: &mut Editor<()>) -> Result<String, ReadlineError> {
+    let readline = rl.readline("lispy> ");
+
+    match readline {
+        Ok(line) => {
+            rl.add_history_entry(line.as_ref());
+            Ok(line)
+        }
+        Err(e) => Err(e),
+    }
+}
 
 fn main() {
     println!("Lispy Version 0.0.1");
@@ -22,28 +37,29 @@ fn main() {
         println!("No previous history file");
     }
 
-    loop {
-        let readline = rl.readline("lispy> ");
+    {
+        loop {
+            let input = match read_input(&mut rl) {
+                Ok(v) => v,
+                Err(e) => {
+                    println!("Got error: {:?}", e);
+                    break;
+                }
+            };
 
-        match readline {
-            Ok(line) => {
-                rl.add_history_entry(line.as_ref());
-                println!("No you're a {:?}", line);
-            }
-            Err(ReadlineError::Interrupted) => {
-                println!("Exiting");
-                break;
-            }
-            Err(ReadlineError::Eof) => {
-                println!("Exiting");
-                break;
-            }
-            Err(e) => {
-                println!("Error: {:?}", e);
-                break;
-            }
-        };
+            let parsed_val = match parse_input(&input) {
+                Ok(v) => v,
+                Err(e) => {
+                    println!("Got error: {:?}", e);
+                    continue;
+                }
+            };
+
+            println!("parsed: {:?}", parsed_val);
+        }
     }
+
+    println!("Exiting");
 
     rl.save_history("/tmp/lispy.history").unwrap();
 }

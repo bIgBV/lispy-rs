@@ -5,3 +5,5 @@ authors = ["bvoleti"]
 
 [dependencies]
 rustyline = "1.0.0"
+lalrpop-util = "0.15.2"
+syntax = {path = "./syntax"}
