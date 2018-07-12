@@ -1,5 +1,5 @@
 // auto-generated: "lalrpop 0.15.2"
-// sha256: b19e1223aa7ce2be75bc65f3a560d2885b2f97e5f85b4df3a14995f3e42adaba
+// sha256: 8ce05d9fb8adc83f55c0acfa86d276846b2d343e86ae50ce832815735e24d64b
 use std::str::FromStr;
 use ast::{Expr, Lispy, Operator, Number};
 #[allow(unused_extern_crates)]
@@ -26,47 +26,55 @@ mod __parse__Lispy {
     }
     const __ACTION: &'static [i8] = &[
         // State 0
-        4, 0, 0, 5, 6, 7, 8, 0, 0,
+        4, 5, 0, 6, 7, 8, 9, 0, 0,
         // State 1
         0, 0, 0, 0, 0, 0, 0, 0, 0,
         // State 2
-        0, 12, 0, 0, 0, 0, 0, 13, 14,
+        0, 13, 0, 0, 0, 0, 0, 14, 15,
         // State 3
-        0, -12, 0, 0, 0, 0, 0, -12, -12,
+        0, -13, 0, 0, 0, 0, 0, -13, -13,
         // State 4
-        0, -10, 0, 0, 0, 0, 0, -10, -10,
+        4, 0, 0, 6, 7, 8, 9, 0, 0,
         // State 5
-        0, -8, 0, 0, 0, 0, 0, -8, -8,
-        // State 6
         0, -11, 0, 0, 0, 0, 0, -11, -11,
-        // State 7
+        // State 6
         0, -9, 0, 0, 0, 0, 0, -9, -9,
+        // State 7
+        0, -12, 0, 0, 0, 0, 0, -12, -12,
         // State 8
-        0, -3, -3, 0, 0, 0, 0, -3, -3,
+        0, -10, 0, 0, 0, 0, 0, -10, -10,
         // State 9
-        0, 12, 0, 0, 0, 0, 0, 13, 14,
+        0, -3, -3, 0, 0, 0, 0, -3, -3,
         // State 10
-        0, -1, -1, 0, 0, 0, 0, -1, -1,
+        0, 13, 0, 0, 0, 0, 0, 14, 15,
         // State 11
-        4, 0, 0, 5, 6, 7, 8, 0, 0,
+        0, -1, -1, 0, 0, 0, 0, -1, -1,
         // State 12
-        0, -7, -7, 0, 0, 0, 0, -7, -7,
+        4, 0, 0, 6, 7, 8, 9, 0, 0,
         // State 13
-        0, -6, -6, 0, 0, 0, 0, -6, -6,
+        0, -8, -8, 0, 0, 0, 0, -8, -8,
         // State 14
-        0, -4, -4, 0, 0, 0, 0, -4, -4,
+        0, -7, -7, 0, 0, 0, 0, -7, -7,
         // State 15
-        0, 12, 0, 0, 0, 0, 0, 13, 14,
+        0, 13, 0, 0, 0, 0, 0, 14, 15,
         // State 16
-        0, 12, 18, 0, 0, 0, 0, 13, 14,
+        0, -4, -4, 0, 0, 0, 0, -4, -4,
         // State 17
+        0, 13, 0, 0, 0, 0, 0, 14, 15,
+        // State 18
+        0, 13, 21, 0, 0, 0, 0, 14, 15,
+        // State 19
+        0, 13, 22, 0, 0, 0, 0, 14, 15,
+        // State 20
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        // State 21
         0, -2, -2, 0, 0, 0, 0, -2, -2,
     ];
     const __EOF_ACTION: &'static [i8] = &[
         // State 0
         0,
         // State 1
-        -13,
+        -14,
         // State 2
         0,
         // State 3
@@ -80,24 +88,32 @@ mod __parse__Lispy {
         // State 7
         0,
         // State 8
-        -3,
-        // State 9
-        -5,
-        // State 10
-        -1,
-        // State 11
         0,
+        // State 9
+        -3,
+        // State 10
+        -5,
+        // State 11
+        -1,
         // State 12
-        -7,
+        0,
         // State 13
-        -6,
+        -8,
         // State 14
-        -4,
+        -7,
         // State 15
         0,
         // State 16
-        0,
+        -4,
         // State 17
+        0,
+        // State 18
+        0,
+        // State 19
+        0,
+        // State 20
+        -6,
+        // State 21
         -2,
     ];
     const __GOTO: &'static [i8] = &[
@@ -106,11 +122,11 @@ mod __parse__Lispy {
         // State 1
         0, 0, 0, 0, 0, 0,
         // State 2
-        9, 10, 0, 11, 0, 0,
+        10, 11, 0, 12, 0, 0,
         // State 3
         0, 0, 0, 0, 0, 0,
         // State 4
-        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 16, 0,
         // State 5
         0, 0, 0, 0, 0, 0,
         // State 6
@@ -120,22 +136,30 @@ mod __parse__Lispy {
         // State 8
         0, 0, 0, 0, 0, 0,
         // State 9
-        15, 0, 0, 11, 0, 0,
+        0, 0, 0, 0, 0, 0,
         // State 10
-        0, 0, 0, 0, 0, 0,
+        17, 0, 0, 12, 0, 0,
         // State 11
-        0, 0, 0, 0, 16, 0,
-        // State 12
         0, 0, 0, 0, 0, 0,
+        // State 12
+        0, 0, 0, 0, 18, 0,
         // State 13
         0, 0, 0, 0, 0, 0,
         // State 14
         0, 0, 0, 0, 0, 0,
         // State 15
-        9, 17, 0, 11, 0, 0,
+        10, 19, 0, 12, 0, 0,
         // State 16
-        15, 0, 0, 11, 0, 0,
+        0, 0, 0, 0, 0, 0,
         // State 17
+        10, 20, 0, 12, 0, 0,
+        // State 18
+        17, 0, 0, 12, 0, 0,
+        // State 19
+        17, 0, 0, 12, 0, 0,
+        // State 20
+        0, 0, 0, 0, 0, 0,
+        // State 21
         0, 0, 0, 0, 0, 0,
     ];
     fn __expected_tokens(__state: usize) -> Vec<::std::string::String> {
@@ -346,6 +370,9 @@ mod __parse__Lispy {
                 __reduce12(input, __action, __lookahead_start, __states, __symbols, ::std::marker::PhantomData::<()>)
             }
             13 => {
+                __reduce13(input, __action, __lookahead_start, __states, __symbols, ::std::marker::PhantomData::<()>)
+            }
+            14 => {
                 // __Lispy = Lispy => ActionFn(0);
                 let __sym0 = __pop_Variant3(__symbols);
                 let __start = __sym0.0.clone();
@@ -440,11 +467,11 @@ mod __parse__Lispy {
         _: ::std::marker::PhantomData<()>,
     ) -> (usize, (usize,__Symbol<'input>,usize), usize)
     {
-        // Expr = Num => ActionFn(2);
+        // Expr = Num => ActionFn(3);
         let __sym0 = __pop_Variant4(__symbols);
         let __start = __sym0.0.clone();
         let __end = __sym0.2.clone();
-        let __nt = super::__action2::<>(input, __sym0);
+        let __nt = super::__action3::<>(input, __sym0);
         let __symbol = (__start, __Symbol::Variant1(__nt), __end);
         (1, __symbol, 0)
     }
@@ -459,14 +486,14 @@ mod __parse__Lispy {
         _: ::std::marker::PhantomData<()>,
     ) -> (usize, (usize,__Symbol<'input>,usize), usize)
     {
-        // Expr = "(", Op, Expr+, ")" => ActionFn(3);
+        // Expr = "(", Op, Expr+, ")" => ActionFn(4);
         let __sym3 = __pop_Variant0(__symbols);
         let __sym2 = __pop_Variant2(__symbols);
         let __sym1 = __pop_Variant5(__symbols);
         let __sym0 = __pop_Variant0(__symbols);
         let __start = __sym0.0.clone();
         let __end = __sym3.2.clone();
-        let __nt = super::__action3::<>(input, __sym0, __sym1, __sym2, __sym3);
+        let __nt = super::__action4::<>(input, __sym0, __sym1, __sym2, __sym3);
         let __symbol = (__start, __Symbol::Variant1(__nt), __end);
         (4, __symbol, 0)
     }
@@ -481,11 +508,11 @@ mod __parse__Lispy {
         _: ::std::marker::PhantomData<()>,
     ) -> (usize, (usize,__Symbol<'input>,usize), usize)
     {
-        // Expr+ = Expr => ActionFn(11);
+        // Expr+ = Expr => ActionFn(12);
         let __sym0 = __pop_Variant1(__symbols);
         let __start = __sym0.0.clone();
         let __end = __sym0.2.clone();
-        let __nt = super::__action11::<>(input, __sym0);
+        let __nt = super::__action12::<>(input, __sym0);
         let __symbol = (__start, __Symbol::Variant2(__nt), __end);
         (1, __symbol, 1)
     }
@@ -500,12 +527,12 @@ mod __parse__Lispy {
         _: ::std::marker::PhantomData<()>,
     ) -> (usize, (usize,__Symbol<'input>,usize), usize)
     {
-        // Expr+ = Expr+, Expr => ActionFn(12);
+        // Expr+ = Expr+, Expr => ActionFn(13);
         let __sym1 = __pop_Variant1(__symbols);
         let __sym0 = __pop_Variant2(__symbols);
         let __start = __sym0.0.clone();
         let __end = __sym1.2.clone();
-        let __nt = super::__action12::<>(input, __sym0, __sym1);
+        let __nt = super::__action13::<>(input, __sym0, __sym1);
         let __symbol = (__start, __Symbol::Variant2(__nt), __end);
         (2, __symbol, 1)
     }
@@ -540,13 +567,16 @@ mod __parse__Lispy {
         _: ::std::marker::PhantomData<()>,
     ) -> (usize, (usize,__Symbol<'input>,usize), usize)
     {
-        // Num = r#"[0-9]+\\.[0-9]+"# => ActionFn(9);
+        // Lispy = "(", Op, Expr+, ")" => ActionFn(2);
+        let __sym3 = __pop_Variant0(__symbols);
+        let __sym2 = __pop_Variant2(__symbols);
+        let __sym1 = __pop_Variant5(__symbols);
         let __sym0 = __pop_Variant0(__symbols);
         let __start = __sym0.0.clone();
-        let __end = __sym0.2.clone();
-        let __nt = super::__action9::<>(input, __sym0);
-        let __symbol = (__start, __Symbol::Variant4(__nt), __end);
-        (1, __symbol, 3)
+        let __end = __sym3.2.clone();
+        let __nt = super::__action2::<>(input, __sym0, __sym1, __sym2, __sym3);
+        let __symbol = (__start, __Symbol::Variant3(__nt), __end);
+        (4, __symbol, 2)
     }
     pub(crate) fn __reduce7<
         'input,
@@ -559,7 +589,7 @@ mod __parse__Lispy {
         _: ::std::marker::PhantomData<()>,
     ) -> (usize, (usize,__Symbol<'input>,usize), usize)
     {
-        // Num = r#"[0-9]+"# => ActionFn(10);
+        // Num = r#"[0-9]+\\.[0-9]+"# => ActionFn(10);
         let __sym0 = __pop_Variant0(__symbols);
         let __start = __sym0.0.clone();
         let __end = __sym0.2.clone();
@@ -578,13 +608,13 @@ mod __parse__Lispy {
         _: ::std::marker::PhantomData<()>,
     ) -> (usize, (usize,__Symbol<'input>,usize), usize)
     {
-        // Op = "+" => ActionFn(4);
+        // Num = r#"[0-9]+"# => ActionFn(11);
         let __sym0 = __pop_Variant0(__symbols);
         let __start = __sym0.0.clone();
         let __end = __sym0.2.clone();
-        let __nt = super::__action4::<>(input, __sym0);
-        let __symbol = (__start, __Symbol::Variant5(__nt), __end);
-        (1, __symbol, 4)
+        let __nt = super::__action11::<>(input, __sym0);
+        let __symbol = (__start, __Symbol::Variant4(__nt), __end);
+        (1, __symbol, 3)
     }
     pub(crate) fn __reduce9<
         'input,
@@ -597,7 +627,7 @@ mod __parse__Lispy {
         _: ::std::marker::PhantomData<()>,
     ) -> (usize, (usize,__Symbol<'input>,usize), usize)
     {
-        // Op = "=" => ActionFn(5);
+        // Op = "+" => ActionFn(5);
         let __sym0 = __pop_Variant0(__symbols);
         let __start = __sym0.0.clone();
         let __end = __sym0.2.clone();
@@ -616,7 +646,7 @@ mod __parse__Lispy {
         _: ::std::marker::PhantomData<()>,
     ) -> (usize, (usize,__Symbol<'input>,usize), usize)
     {
-        // Op = "*" => ActionFn(6);
+        // Op = "=" => ActionFn(6);
         let __sym0 = __pop_Variant0(__symbols);
         let __start = __sym0.0.clone();
         let __end = __sym0.2.clone();
@@ -635,7 +665,7 @@ mod __parse__Lispy {
         _: ::std::marker::PhantomData<()>,
     ) -> (usize, (usize,__Symbol<'input>,usize), usize)
     {
-        // Op = "/" => ActionFn(7);
+        // Op = "*" => ActionFn(7);
         let __sym0 = __pop_Variant0(__symbols);
         let __start = __sym0.0.clone();
         let __end = __sym0.2.clone();
@@ -654,11 +684,30 @@ mod __parse__Lispy {
         _: ::std::marker::PhantomData<()>,
     ) -> (usize, (usize,__Symbol<'input>,usize), usize)
     {
-        // Op = "%" => ActionFn(8);
+        // Op = "/" => ActionFn(8);
         let __sym0 = __pop_Variant0(__symbols);
         let __start = __sym0.0.clone();
         let __end = __sym0.2.clone();
         let __nt = super::__action8::<>(input, __sym0);
+        let __symbol = (__start, __Symbol::Variant5(__nt), __end);
+        (1, __symbol, 4)
+    }
+    pub(crate) fn __reduce13<
+        'input,
+    >(
+        input: &'input str,
+        __action: i8,
+        __lookahead_start: Option<&usize>,
+        __states: &mut ::std::vec::Vec<i8>,
+        __symbols: &mut ::std::vec::Vec<(usize,__Symbol<'input>,usize)>,
+        _: ::std::marker::PhantomData<()>,
+    ) -> (usize, (usize,__Symbol<'input>,usize), usize)
+    {
+        // Op = "%" => ActionFn(9);
+        let __sym0 = __pop_Variant0(__symbols);
+        let __start = __sym0.0.clone();
+        let __end = __sym0.2.clone();
+        let __nt = super::__action9::<>(input, __sym0);
         let __symbol = (__start, __Symbol::Variant5(__nt), __end);
         (1, __symbol, 4)
     }
@@ -802,6 +851,20 @@ fn __action2<
     'input,
 >(
     input: &'input str,
+    (_, _, _): (usize, &'input str, usize),
+    (_, o, _): (usize, Operator, usize),
+    (_, e, _): (usize, ::std::vec::Vec<Box<Expr>>, usize),
+    (_, _, _): (usize, &'input str, usize),
+) -> Lispy
+{
+    Lispy::Terms(o, e)
+}
+
+#[allow(unused_variables)]
+fn __action3<
+    'input,
+>(
+    input: &'input str,
     (_, __0, _): (usize, f64, usize),
 ) -> Box<Expr>
 {
@@ -809,7 +872,7 @@ fn __action2<
 }
 
 #[allow(unused_variables)]
-fn __action3<
+fn __action4<
     'input,
 >(
     input: &'input str,
@@ -823,7 +886,7 @@ fn __action3<
 }
 
 #[allow(unused_variables)]
-fn __action4<
+fn __action5<
     'input,
 >(
     input: &'input str,
@@ -834,7 +897,7 @@ fn __action4<
 }
 
 #[allow(unused_variables)]
-fn __action5<
+fn __action6<
     'input,
 >(
     input: &'input str,
@@ -845,7 +908,7 @@ fn __action5<
 }
 
 #[allow(unused_variables)]
-fn __action6<
+fn __action7<
     'input,
 >(
     input: &'input str,
@@ -856,7 +919,7 @@ fn __action6<
 }
 
 #[allow(unused_variables)]
-fn __action7<
+fn __action8<
     'input,
 >(
     input: &'input str,
@@ -867,7 +930,7 @@ fn __action7<
 }
 
 #[allow(unused_variables)]
-fn __action8<
+fn __action9<
     'input,
 >(
     input: &'input str,
@@ -875,17 +938,6 @@ fn __action8<
 ) -> Operator
 {
     Operator::Mod
-}
-
-#[allow(unused_variables)]
-fn __action9<
-    'input,
->(
-    input: &'input str,
-    (_, __0, _): (usize, &'input str, usize),
-) -> f64
-{
-    f64::from_str(__0).unwrap()
 }
 
 #[allow(unused_variables)]
@@ -904,6 +956,17 @@ fn __action11<
     'input,
 >(
     input: &'input str,
+    (_, __0, _): (usize, &'input str, usize),
+) -> f64
+{
+    f64::from_str(__0).unwrap()
+}
+
+#[allow(unused_variables)]
+fn __action12<
+    'input,
+>(
+    input: &'input str,
     (_, __0, _): (usize, Box<Expr>, usize),
 ) -> ::std::vec::Vec<Box<Expr>>
 {
@@ -911,7 +974,7 @@ fn __action11<
 }
 
 #[allow(unused_variables)]
-fn __action12<
+fn __action13<
     'input,
 >(
     input: &'input str,

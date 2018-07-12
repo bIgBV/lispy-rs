@@ -2,6 +2,7 @@ use std::fmt::{Debug, Error, Formatter};
 
 pub type Number = f64;
 
+#[derive(Copy, Clone)]
 pub enum Operator {
     Add,
     Sub,

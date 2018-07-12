@@ -4,7 +4,8 @@ use ast::{Expr, Lispy, Operator, Number};
 grammar;
 
 pub Lispy: Lispy = {
-    Op Expr+ => Lispy::Terms(<>)
+    Op Expr+ => Lispy::Terms(<>),
+    "(" <o:Op> <e:Expr+> ")" => Lispy::Terms(o, e)
 };
 
 Expr: Box<Expr> = {

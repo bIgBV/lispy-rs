@@ -2,10 +2,9 @@ extern crate lalrpop_util;
 
 pub mod parser;
 
-mod ast;
+pub mod ast;
 
 pub use parser::LispyParser as Parser;
-pub use ast::Lispy as Lispy;
 
 #[cfg(test)]
 mod tests {
