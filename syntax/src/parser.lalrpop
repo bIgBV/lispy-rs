@@ -1,24 +1,28 @@
 use std::str::FromStr;
-use ast::{Expr, Lispy, Operator, Number};
+use ast::{Expr, Lispy, Symbol, Number, Sexpr};
 
 grammar;
 
 pub Lispy: Lispy = {
-    Op Expr+ => Lispy::Terms(<>),
-    "(" <o:Op> <e:Expr+> ")" => Lispy::Terms(o, e)
+    <e:Expr*> => <>
 };
 
 Expr: Box<Expr> = {
     Num => Box::new(Expr::Val(<>)),
-    "(" <o:Op> <e:Expr+> ")" => Box::new(Expr::Group(o, e))
+    Sym => Box::new(Expr::Sym(<>)),
+    Sexpr => Box::new(Expr::Exp(<>))
 };
 
-Op: Operator = {
-    "+" => Operator::Add,
-    "=" => Operator::Sub,
-    "*" => Operator::Mul,
-    "/" => Operator::Div,
-    "%" => Operator::Mod,
+Sexpr: Sexpr = {
+    "(" <e:Expr*> ")" => <>
+};
+
+Sym: Symbol = {
+    "+" => Symbol::Add,
+    "=" => Symbol::Sub,
+    "*" => Symbol::Mul,
+    "/" => Symbol::Div,
+    "%" => Symbol::Mod,
 };
 
 Num: f64 = {

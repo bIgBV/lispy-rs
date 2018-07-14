@@ -3,7 +3,7 @@ use std::fmt::{Debug, Error, Formatter};
 pub type Number = f64;
 
 #[derive(Copy, Clone)]
-pub enum Operator {
+pub enum Symbol {
     Add,
     Sub,
     Mul,
@@ -11,9 +11,9 @@ pub enum Operator {
     Mod,
 }
 
-impl Debug for Operator {
+impl Debug for Symbol {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-        use self::Operator::*;
+        use self::Symbol::*;
         match *self {
             Mul => write!(fmt, "*"),
             Div => write!(fmt, "/"),
@@ -24,22 +24,12 @@ impl Debug for Operator {
     }
 }
 
+pub type Sexpr = Vec<Box<Expr>>;
+
 pub enum Expr {
     Val(Number),
-    Group(Operator, Vec<Box<Expr>>),
+    Sym(Symbol),
+    Exp(Sexpr),
 }
 
-impl Debug for Expr {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-        use self::Expr::*;
-        match *self {
-            Val(n) => write!(fmt, "{}", n.to_string()),
-            Group(ref op, ref exprs) => write!(fmt, "{:?} {:?}", op, exprs),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum Lispy {
-    Terms(Operator, Vec<Box<Expr>>),
-}
+pub type Lispy = Vec<Box<Expr>>;
