@@ -2,4 +2,5 @@ target
 tags
 
 syntax/Cargo.lock
+syntax/src/parser.rs
 **/*.rs.bk
