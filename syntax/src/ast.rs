@@ -30,6 +30,20 @@ pub enum Expr {
     Val(Number),
     Sym(Symbol),
     Exp(Sexpr),
+    Empty,
+}
+
+impl Debug for Expr {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
+        use self::Expr::*;
+
+        match *self {
+            Val(v) => write!(fmt, "{:?}", v),
+            Sym(s) => write!(fmt, "{:?}", s),
+            Exp(ref e) => write!(fmt, "{:?}", e),
+            Empty => write!(fmt, ""),
+        }
+    }
 }
 
 pub type Lispy = Vec<Box<Expr>>;
