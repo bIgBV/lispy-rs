@@ -5,7 +5,7 @@ use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
 use syntax::ast::Lispy;
-use syntax::ast::{Expr, Number, Symbol};
+use syntax::ast::{Arith, Expr, Number, Symbol};
 use syntax::Parser;
 
 use std::error;
@@ -53,14 +53,57 @@ impl error::Error for LispyError {
 
 type EvalResult<T> = std::result::Result<T, LispyError>;
 
-fn perform_artih_op(op: Symbol, lhs: Number, rhs: Number) -> Number {
-    match op {
-        Symbol::Add => lhs + rhs,
-        Symbol::Sub => lhs - rhs,
-        Symbol::Mul => lhs * rhs,
-        Symbol::Div => lhs / rhs,
-        Symbol::Mod => lhs % rhs,
+trait Operate {
+    fn operate(&self, operands: &Vec<Box<Expr>>) -> EvalResult<Expr>;
+}
+
+impl Operate for Arith {
+    fn operate(&self, operands: &Vec<Box<Expr>>) -> EvalResult<Expr> {
+        let init_val: Number = match *self {
+            Arith::Add => 0.0,
+            Arith::Sub => 0.0,
+            Arith::Mul => 1.0,
+            Arith::Div => 1.0,
+            Arith::Mod => 1.0,
+        };
+
+        let mut acc = init_val;
+
+        for x in operands[1..].iter() {
+            let val = match **x {
+                Expr::Val(v) => v,
+                _ => {
+                    return Err(LispyError::BadNum);
+                }
+            };
+            acc = perform_artih_op(self, acc, val);
+        }
+
+        Ok(Expr::Val(acc))
     }
+}
+
+fn perform_artih_op(op: &Arith, lhs: Number, rhs: Number) -> Number {
+    match &op {
+        Arith::Add => lhs + rhs,
+        Arith::Sub => lhs - rhs,
+        Arith::Mul => lhs * rhs,
+        Arith::Div => lhs / rhs,
+        Arith::Mod => lhs % rhs,
+    }
+}
+
+impl Operate for Symbol {
+    fn operate(&self, o: &Vec<Box<Expr>>) -> EvalResult<Expr> {
+        match *self {
+            Symbol::Arith(v) => v.operate(o),
+        }
+    }
+}
+
+/// Executes a builtin op. Right now only arithmetic opereations` TODO: Make this generic over Symbol<T> where T: Operate
+fn builtin_op<T: Operate>(exprs: &Vec<Box<Expr>>, op: &T) -> EvalResult<Expr> {
+    op.operate(exprs)
 }
 
 /// Main evaluation of our REPL process. The function iterates over all the expressions in an
@@ -95,36 +138,11 @@ fn eval(exprs: &Vec<Box<Expr>>) -> EvalResult<Expr> {
     }
 
     // If the first item is a symbol in the list, then perform the operation for the symbol
-    if let Expr::Sym(sym) = *updated_exp[0] {
-        return builtin_op(&updated_exp, sym);
+    if let Expr::Sym(ref sym) = *updated_exp[0] {
+        return sym.operate(&updated_exp);
     }
 
     unreachable!();
-}
-
-/// Executes a builtin op. Right now only arithmetic opereations` TODO: Make this generic over Symbol<T> where T: Operate
-fn builtin_op(exprs: &Vec<Box<Expr>>, op: Symbol) -> EvalResult<Expr> {
-    let init_val: Number = match op {
-        Symbol::Add => 0.0,
-        Symbol::Sub => 0.0,
-        Symbol::Mul => 1.0,
-        Symbol::Div => 1.0,
-        Symbol::Mod => 1.0,
-    };
-
-    let mut acc = init_val;
-
-    for x in &exprs[1..] {
-        let val = match **x {
-            Expr::Val(v) => v,
-            _ => {
-                return Err(LispyError::BadNum);
-            }
-        };
-        acc = perform_artih_op(op, acc, val);
-    }
-
-    Ok(Expr::Val(acc))
 }
 
 /// First level of expression evaluation. This is a simple match expression which either returns
@@ -132,8 +150,11 @@ fn builtin_op(exprs: &Vec<Box<Expr>>, op: Symbol) -> EvalResult<Expr> {
 fn eval_input(expr: &Expr) -> EvalResult<Expr> {
     match *expr {
         Expr::Val(v) => Ok(Expr::Val(v)),
-        Expr::Sym(v) => Ok(Expr::Sym(v)),
+        Expr::Sym(ref v) => match *v {
+            Symbol::Arith(v) => Ok(Expr::Sym(Symbol::Arith(v))),
+        },
         Expr::Sexp(ref v) => eval(v),
+        Expr::Qexp(_) => Ok(Expr::Empty), // TODO: Actual qexp handling
         Expr::Empty => Ok(Expr::Empty),
     }
 }

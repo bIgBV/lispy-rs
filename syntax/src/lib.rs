@@ -19,4 +19,9 @@ mod tests {
     fn sexpr_test() {
         assert!(parser::LispyParser::new().parse("+ 9 (8 37 8)").is_ok());
     }
+
+    #[test]
+    fn qexpr_test() {
+        assert!(parser::LispyParser::new().parse("+ 9 (8 37 8) {9 8 (3 8)}").is_ok());
+    }
 }

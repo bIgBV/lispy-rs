@@ -3,7 +3,7 @@ use std::fmt::{Debug, Error, Formatter};
 pub type Number = f64;
 
 #[derive(Copy, Clone)]
-pub enum Symbol {
+pub enum Arith {
     Add,
     Sub,
     Mul,
@@ -11,9 +11,9 @@ pub enum Symbol {
     Mod,
 }
 
-impl Debug for Symbol {
+impl Debug for Arith {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-        use self::Symbol::*;
+        use self::Arith::*;
         match *self {
             Mul => write!(fmt, "*"),
             Div => write!(fmt, "/"),
@@ -24,12 +24,18 @@ impl Debug for Symbol {
     }
 }
 
+#[derive(Debug)]
+pub enum Symbol {
+    Arith(Arith),
+}
+
 pub type Sexpr = Vec<Box<Expr>>;
 
 pub enum Expr {
     Val(Number),
     Sym(Symbol),
     Sexp(Vec<Box<Expr>>),
+    Qexp(Vec<Box<Expr>>),
     Empty,
 }
 
@@ -39,8 +45,9 @@ impl Debug for Expr {
 
         match *self {
             Val(v) => write!(fmt, "{:?}", v),
-            Sym(s) => write!(fmt, "{:?}", s),
+            Sym(ref s) => write!(fmt, "{:?}", s),
             Sexp(ref e) => write!(fmt, "{:?}", e),
+            Qexp(ref e) => write!(fmt, "{{ {:?} }}", e),
             Empty => write!(fmt, ""),
         }
     }
