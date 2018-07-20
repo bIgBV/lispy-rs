@@ -10,7 +10,7 @@ pub Lispy: Lispy = {
 Expr: Box<Expr> = {
     Num => Box::new(Expr::Val(<>)),
     Sym => Box::new(Expr::Sym(<>)),
-    Sexpr => Box::new(Expr::Exp(<>))
+    Sexpr => Box::new(Expr::Sexp(<>))
 };
 
 Sexpr: Sexpr = {

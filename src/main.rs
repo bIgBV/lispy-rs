@@ -102,8 +102,7 @@ fn eval(exprs: &Vec<Box<Expr>>) -> EvalResult<Expr> {
     unreachable!();
 }
 
-/// Executes a builtin op. Right now only arithmetic opereations`
-// TODO: Make this generic over Symbol<T> where T: Operate
+/// Executes a builtin op. Right now only arithmetic opereations` TODO: Make this generic over Symbol<T> where T: Operate
 fn builtin_op(exprs: &Vec<Box<Expr>>, op: Symbol) -> EvalResult<Expr> {
     let init_val: Number = match op {
         Symbol::Add => 0.0,
@@ -134,7 +133,7 @@ fn eval_input(expr: &Expr) -> EvalResult<Expr> {
     match *expr {
         Expr::Val(v) => Ok(Expr::Val(v)),
         Expr::Sym(v) => Ok(Expr::Sym(v)),
-        Expr::Exp(ref v) => eval(v),
+        Expr::Sexp(ref v) => eval(v),
         Expr::Empty => Ok(Expr::Empty),
     }
 }
@@ -166,7 +165,7 @@ fn main() {
             }
         };
 
-        let value = match eval_input(&Expr::Exp(parsed_val)) {
+        let value = match eval_input(&Expr::Sexp(parsed_val)) {
             Ok(v) => v,
             Err(e) => {
                 println!("Got error: {:?}", e);

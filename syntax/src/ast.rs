@@ -29,7 +29,7 @@ pub type Sexpr = Vec<Box<Expr>>;
 pub enum Expr {
     Val(Number),
     Sym(Symbol),
-    Exp(Sexpr),
+    Sexp(Vec<Box<Expr>>),
     Empty,
 }
 
@@ -40,7 +40,7 @@ impl Debug for Expr {
         match *self {
             Val(v) => write!(fmt, "{:?}", v),
             Sym(s) => write!(fmt, "{:?}", s),
-            Exp(ref e) => write!(fmt, "{:?}", e),
+            Sexp(ref e) => write!(fmt, "{:?}", e),
             Empty => write!(fmt, ""),
         }
     }
