@@ -50,6 +50,7 @@ impl error::Error for LispyError {
         "REPL error"
     }
 }
+
 type EvalResult<T> = std::result::Result<T, LispyError>;
 
 fn perform_artih_op(op: Symbol, lhs: Number, rhs: Number) -> Number {
@@ -62,32 +63,47 @@ fn perform_artih_op(op: Symbol, lhs: Number, rhs: Number) -> Number {
     }
 }
 
+/// Main evaluation of our REPL process. The function iterates over all the expressions in an
+/// S-expression and then calls eval_input on them. This is recursive step. Once all the sub
+/// expressions have been evaluated, it handles the resulting list appropriately.
+///
+/// This function effectively walks down the AST, breaking it into individual blocks separated by
+/// the symbol for a group and walks back up by combining the symbol and its operands until only
+/// a single expression is left
 fn eval(exprs: &Vec<Box<Expr>>) -> EvalResult<Expr> {
     let mut updated_exp = vec![];
 
     for expr in &*exprs {
         let result = try!(eval_input(expr));
+
+        // Ignore an empty expression, effectively deleting it from the AST
         match result {
             Expr::Empty => continue,
             _ => updated_exp.push(Box::new(result)),
         }
     }
 
+    // Empty expression will be removed down the recursive stack
     if exprs.len() == 0 {
         return Ok(Expr::Empty);
     }
 
+    // A single expression such as (5)
     if updated_exp.len() == 1 {
+        // TODO: should we allow single symbols?
         return Ok(*updated_exp.remove(0));
     }
 
+    // If the first item is a symbol in the list, then perform the operation for the symbol
     if let Expr::Sym(sym) = *updated_exp[0] {
         return builtin_op(&updated_exp, sym);
     }
 
-    Err(LispyError::BadOp)
+    unreachable!();
 }
 
+/// Executes a builtin op. Right now only arithmetic opereations`
+// TODO: Make this generic over Symbol<T> where T: Operate
 fn builtin_op(exprs: &Vec<Box<Expr>>, op: Symbol) -> EvalResult<Expr> {
     let init_val: Number = match op {
         Symbol::Add => 0.0,
@@ -112,6 +128,8 @@ fn builtin_op(exprs: &Vec<Box<Expr>>, op: Symbol) -> EvalResult<Expr> {
     Ok(Expr::Val(acc))
 }
 
+/// First level of expression evaluation. This is a simple match expression which either returns
+/// a single expression or calls `eval` on an sexpression
 fn eval_input(expr: &Expr) -> EvalResult<Expr> {
     match *expr {
         Expr::Val(v) => Ok(Expr::Val(v)),
