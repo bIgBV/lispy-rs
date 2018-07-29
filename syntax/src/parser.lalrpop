@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use ast::{Expr, Lispy, Arith, Number, Sexpr, Symbol};
+use ast::{Expr, Lispy, Arith, Number, Sexpr, Symbol, Builtin};
 
 grammar;
 
@@ -7,18 +7,18 @@ pub Lispy: Lispy = {
     <e:Expr*> => <>
 };
 
-Expr: Box<Expr> = {
-    Num => Box::new(Expr::Val(<>)),
-    Sym => Box::new(Expr::Sym(<>)),
-    Sexpr => Box::new(Expr::Sexp(<>)),
-    Qexpr => Box::new(Expr::Qexp(<>))
+Expr: Expr = {
+    Num => Expr::Val(<>),
+    Sym => Expr::Sym(<>),
+    Sexpr => Expr::Sexp(<>),
+    Qexpr => Expr::Qexp(<>)
 };
 
 Sexpr: Sexpr = {
     "(" <e:Expr*> ")" => <>
 };
 
-Qexpr: Vec<Box<Expr>> = {
+Qexpr: Vec<Expr> = {
     "{" <e:Expr*> "}" => <>
 }
 
@@ -28,6 +28,11 @@ Sym: Symbol = {
     "*" => Symbol::Arith(Arith::Mul),
     "/" => Symbol::Arith(Arith::Div),
     "%" => Symbol::Arith(Arith::Mod),
+    "head" => Symbol::Builtin(Builtin::Head),
+    "tail" => Symbol::Builtin(Builtin::Tail),
+    "list" => Symbol::Builtin(Builtin::List),
+    "eval" => Symbol::Builtin(Builtin::Eval),
+    "join" => Symbol::Builtin(Builtin::Join),
 };
 
 Num: f64 = {

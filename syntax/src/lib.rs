@@ -24,4 +24,9 @@ mod tests {
     fn qexpr_test() {
         assert!(parser::LispyParser::new().parse("+ 9 (8 37 8) {9 8 (3 8)}").is_ok());
     }
+
+    #[test]
+    fn builtin_test() {
+        assert!(parser::LispyParser::new().parse("eval (tail {tail tail {5 6 7}})").is_ok());
+    }
 }
