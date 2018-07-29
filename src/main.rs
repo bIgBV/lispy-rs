@@ -109,7 +109,7 @@ fn eval(exprs: &Vec<Expr>) -> EvalResult<Expr> {
 
 /// First level of expression evaluation. This is a simple match expression which either returns
 /// a single expression or calls `eval` on an sexpression
-fn eval_input(expr: &Expr) -> EvalResult<Expr> {
+pub(crate) fn eval_input(expr: &Expr) -> EvalResult<Expr> {
     match *expr {
         Expr::Val(v) => Ok(Expr::Val(v)),
         Expr::Sym(ref v) => match *v {

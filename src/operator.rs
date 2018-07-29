@@ -47,12 +47,12 @@ impl Operate for Builtin {
             Builtin::Tail => tail(&operands[1..]),
             Builtin::List => list(&operands[1..]),
             Builtin::Join => join(&operands[1..]),
-            Builtin::Eval => unimplemented!(),
+            Builtin::Eval => eval(&operands[1..]),
         }
     }
 }
 
-pub fn head(operands: &[Expr]) -> EvalResult<Expr> {
+fn head(operands: &[Expr]) -> EvalResult<Expr> {
     if operands.len() == 0 {
         return Err(LispyError::ListError("Not enough arguments".to_owned()));
     }
@@ -71,7 +71,7 @@ pub fn head(operands: &[Expr]) -> EvalResult<Expr> {
     Err(LispyError::ListError("Wrong type of argument".to_owned()))
 }
 
-pub fn tail(operands: &[Expr]) -> EvalResult<Expr> {
+fn tail(operands: &[Expr]) -> EvalResult<Expr> {
     if operands.len() == 0 {
         return Err(LispyError::ListError("Not enough arguments".to_owned()));
     }
@@ -90,7 +90,7 @@ pub fn tail(operands: &[Expr]) -> EvalResult<Expr> {
     Err(LispyError::ListError("Wrong type of argument".to_owned()))
 }
 
-pub fn join(operands: &[Expr]) -> EvalResult<Expr> {
+fn join(operands: &[Expr]) -> EvalResult<Expr> {
     for operand in operands {
         match operand {
             Expr::Qexp(_) => continue,
@@ -111,6 +111,21 @@ pub fn join(operands: &[Expr]) -> EvalResult<Expr> {
     }
 
     Ok(Expr::Qexp(new_expr))
+}
+
+fn eval(operands: &[Expr]) -> EvalResult<Expr> {
+    if operands.len() > 1 {
+        return Err(LispyError::BadOp);
+    }
+
+    match operands[0] {
+        Expr::Qexp(ref v) => {
+            use super::eval_input;
+
+            return eval_input(&Expr::Sexp(v.clone()));
+        },
+        _ => Err(LispyError::BadOp)
+    }
 }
 
 pub fn list(operands: &[Expr]) -> EvalResult<Expr> {
