@@ -31,6 +31,7 @@ pub enum Builtin {
     List,
     Join,
     Eval,
+    Len
 }
 
 #[derive(Debug, Clone, PartialEq)]

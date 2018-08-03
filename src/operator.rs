@@ -48,6 +48,7 @@ impl Operate for Builtin {
             Builtin::List => list(&operands[1..]),
             Builtin::Join => join(&operands[1..]),
             Builtin::Eval => eval(&operands[1..]),
+            Builtin::Len => len(&operands[1..]),
         }
     }
 }
@@ -128,6 +129,17 @@ fn eval(operands: &[Expr]) -> EvalResult<Expr> {
     }
 }
 
+fn len(operands: &[Expr]) -> EvalResult<Expr> {
+    if operands.len() > 1 {
+        return Err(LispyError::BadOp);
+    }
+
+    match operands[0] {
+        Expr::Qexp(ref v) => Ok(Expr::Val(v.len() as Number)),
+        _ => Err(LispyError::BadOp)
+    }
+}
+
 pub fn list(operands: &[Expr]) -> EvalResult<Expr> {
     let mut new_expr = vec![];
     new_expr.extend_from_slice(&operands[..]);
@@ -203,4 +215,14 @@ mod tests {
     //     let result = list(&ast).unwrap();
     //     assert_eq!(result, expected);
     // }
+
+    #[test]
+    fn len_test() {
+        let ast = parse_input("{1 2 3 4 5}").unwrap();
+        let expected = Expr::Val(5.0 as Number);
+
+        let result = len(&ast).unwrap();
+
+        assert_eq!(result, expected);
+    }
 }

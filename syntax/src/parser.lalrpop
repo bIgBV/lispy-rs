@@ -33,6 +33,7 @@ Sym: Symbol = {
     "list" => Symbol::Builtin(Builtin::List),
     "eval" => Symbol::Builtin(Builtin::Eval),
     "join" => Symbol::Builtin(Builtin::Join),
+    "len" => Symbol::Builtin(Builtin::Len),
 };
 
 Num: f64 = {
