@@ -1,7 +1,8 @@
 use std::str::FromStr;
-use ast::{Expr, Lispy, Arith, Number, Sexpr, Symbol, Builtin};
+use ast::{Expr, Lispy, Arith, Number, Symbol, Builtin, Variable};
+use slotmap::SlotMap;
 
-grammar;
+grammar<'map>(table: &'map mut SlotMap<String>);
 
 pub Lispy: Lispy = {
     <e:Expr*> => <>
@@ -11,10 +12,10 @@ Expr: Expr = {
     Num => Expr::Val(<>),
     Sym => Expr::Sym(<>),
     Sexpr => Expr::Sexp(<>),
-    Qexpr => Expr::Qexp(<>)
+    Qexpr => Expr::Qexp(<>),
 };
 
-Sexpr: Sexpr = {
+Sexpr: Vec<Expr> = {
     "(" <e:Expr*> ")" => <>
 };
 
@@ -34,9 +35,24 @@ Sym: Symbol = {
     "eval" => Symbol::Builtin(Builtin::Eval),
     "join" => Symbol::Builtin(Builtin::Join),
     "len" => Symbol::Builtin(Builtin::Len),
+    <v:Var> => Symbol::Var(<>),
 };
 
-Num: f64 = {
-    r"[0-9]+\.[0-9]+" => f64::from_str(<>).unwrap(),
-    r"[0-9]+" => f64::from_str(<>).unwrap()
+Num: Number = {
+    Decimal => f64::from_str(<>).unwrap(),
+    Integral => f64::from_str(<>).unwrap()
 };
+
+Var: Variable = {
+    Identifier => {
+        Variable { key: table.insert(<>.to_string()) }
+    }
+};
+
+match {
+    r"[0-9]+\.[0-9]+" => Decimal,
+    r"[0-9]+" => Integral,
+} else {
+    r"[a-zA-Z0-9_]+" => Identifier,
+    _
+}

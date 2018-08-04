@@ -1,7 +1,10 @@
 extern crate rustyline;
+extern crate slotmap;
 extern crate syntax;
 
 mod operator;
+
+use slotmap::SlotMap;
 
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
@@ -15,8 +18,8 @@ use std::fmt;
 
 use operator::Operate;
 
-pub fn parse_input(input: &str) -> Result<Lispy, String> {
-    match Parser::new().parse(input) {
+pub fn parse_input(input: &str, table: SlotMap<String>) -> Result<Expr, String> {
+    match Parser::new(table).parse(input) {
         Ok(v) => Ok(v),
         Err(e) => Err(format!("Parse error: {:?}", e)),
     }
@@ -61,7 +64,7 @@ impl error::Error for LispyError {
 
 pub type EvalResult<T> = std::result::Result<T, LispyError>;
 
-/// Executes a builtin op. Right now only arithmetic opereations` TODO: Make this generic over Symbol<T> where T: Operate
+/// Executes a builtin op. Right now only arithmetic opereations
 pub fn builtin_op<T: Operate>(exprs: &Vec<Expr>, op: &T) -> EvalResult<Expr> {
     op.operate(exprs)
 }
@@ -132,6 +135,8 @@ fn main() {
         println!("No previous history file");
     }
 
+    let mut table = SlotMap::new();
+
     loop {
         let input = match read_input(&mut rl) {
             Ok(v) => v,
@@ -141,7 +146,7 @@ fn main() {
             }
         };
 
-        let parsed_val = match parse_input(&input) {
+        let parsed_val = match parse_input(&input, table) {
             Ok(v) => v,
             Err(e) => {
                 println!("Got error: {:?}", e);
@@ -150,7 +155,7 @@ fn main() {
         };
         println!("lispy> {:?}", parsed_val);
 
-        let value = match eval_input(&Expr::Sexp(parsed_val)) {
+        let value = match eval_input(&parsed_val) {
             Ok(v) => v,
             Err(e) => {
                 println!("Got error: {:?}", e);

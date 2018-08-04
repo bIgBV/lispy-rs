@@ -5,4 +5,5 @@ authors = ["bvoleti"]
 
 [dependencies]
 rustyline = "1.0.0"
+slotmap = "0.2.0"
 syntax = {path = "./syntax"}

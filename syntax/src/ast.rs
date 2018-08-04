@@ -1,4 +1,5 @@
 use std::fmt::{Debug, Error, Formatter};
+use slotmap::Key;
 
 pub type Number = f64;
 
@@ -34,13 +35,18 @@ pub enum Builtin {
     Len
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Variable {
+    pub key: Key
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Symbol {
     Arith(Arith),
     Builtin(Builtin),
+    Var(Variable)
 }
 
-pub type Sexpr = Vec<Expr>;
 
 #[derive(Clone, PartialEq)]
 pub enum Expr {
@@ -49,6 +55,7 @@ pub enum Expr {
     Sexp(Vec<Expr>),
     Qexp(Vec<Expr>),
     Empty,
+    Error
 }
 
 impl Debug for Expr {
@@ -61,8 +68,10 @@ impl Debug for Expr {
             Sexp(ref e) => write!(fmt, "Sexp({:?})", e),
             Qexp(ref e) => write!(fmt, "Qexp{{{:?}}}", e),
             Empty => write!(fmt, ""),
+            Error => write!(fmt, "err")
         }
     }
 }
 
 pub type Lispy = Vec<Expr>;
+
