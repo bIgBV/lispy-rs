@@ -4,11 +4,11 @@ use syntax::ast::*;
 use environment::Env;
 
 pub trait Operate {
-    fn operate(&self, operands: &Vec<Expr>, env: &Env) -> EvalResult<Expr>;
+    fn operate(&self, operands: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr>;
 }
 
 impl Operate for Arith {
-    fn operate(&self, operands: &Vec<Expr>, env: &Env) -> EvalResult<Expr> {
+    fn operate(&self, operands: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr> {
         let init_val: Number = match *self {
             Arith::Add => 0.0,
             Arith::Sub => 0.0,
@@ -46,7 +46,7 @@ fn perform_artih_op(op: &Arith, lhs: Number, rhs: Number) -> Number {
 }
 
 impl Operate for Builtin {
-    fn operate(&self, operands: &Vec<Expr>, env: &Env) -> EvalResult<Expr> {
+    fn operate(&self, operands: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr> {
         match *self {
             Builtin::Head => head(&operands[1..]),
             Builtin::Tail => tail(&operands[1..]),
@@ -54,7 +54,28 @@ impl Operate for Builtin {
             Builtin::Join => join(&operands[1..]),
             Builtin::Eval => eval(&operands[1..], env),
             Builtin::Len => len(&operands[1..]),
+            Builtin::Def => define(&operands[1..], env),
         }
+    }
+}
+
+fn define(operands: &[Expr], env: &mut Env) -> EvalResult<Expr> {
+    if let Expr::Qexp(ref exprs) = operands[0] {
+        if !(exprs.len() == operands.len() - 1) {
+            return Err(LispyError::BadOperand);
+        }
+
+        for expr in exprs {
+            if let Expr::Sym(Symbol::Var(var)) = expr {
+                // Can we do better than a clone?
+                env.table.insert(var.value.clone(), var.clone());
+            } else {
+                return Err(LispyError::BadOperand);
+            }
+        }
+        Ok(Expr::Empty)
+    } else {
+        Err(LispyError::BadOperand)
     }
 }
 
@@ -119,7 +140,7 @@ fn join(operands: &[Expr]) -> EvalResult<Expr> {
     Ok(Expr::Qexp(new_expr))
 }
 
-fn eval(operands: &[Expr], env: &Env) -> EvalResult<Expr> {
+fn eval(operands: &[Expr], env: &mut Env) -> EvalResult<Expr> {
     if operands.len() > 1 {
         return Err(LispyError::BadOp);
     }
@@ -152,7 +173,7 @@ pub fn list(operands: &[Expr]) -> EvalResult<Expr> {
 }
 
 impl Operate for Symbol {
-    fn operate(&self, o: &Vec<Expr>, env: &Env) -> EvalResult<Expr> {
+    fn operate(&self, o: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr> {
         match *self {
             Symbol::Arith(v) => v.operate(o, env),
             Symbol::Builtin(v) => v.operate(o, env),
@@ -231,5 +252,17 @@ mod tests {
         let result = len(&ast).unwrap();
 
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn define_test() {
+        let ast = parse_input("{x} 100").unwrap();
+        let expected = Expr::Empty;
+
+        let mut env = Env::new();
+
+        let result = define(&ast, &mut env).unwrap();
+        assert_eq!(expected, result);
+        assert!(env.table.contains_key("x".to_string()));
     }
 }

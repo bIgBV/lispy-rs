@@ -5,8 +5,6 @@ extern crate syntax;
 mod environment;
 mod operator;
 
-use slotmap::SlotMap;
-
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
@@ -14,14 +12,15 @@ use syntax::ast::Lispy;
 use syntax::ast::{Expr, Symbol};
 use syntax::Parser;
 
+use std::collections::HashMap;
 use std::error;
 use std::fmt;
 
 use environment::Env;
 use operator::Operate;
 
-pub fn parse_input(input: &str, env: &mut Env) -> Result<Expr, String> {
-    match Parser::new(&mut env.table).parse(input) {
+pub fn parse_input(input: &str) -> Result<Expr, String> {
+    match Parser::new().parse(input) {
         Ok(v) => Ok(v),
         Err(e) => Err(format!("Parse error: {:?}", e)),
     }
@@ -67,7 +66,7 @@ impl error::Error for LispyError {
 pub type EvalResult<T> = std::result::Result<T, LispyError>;
 
 /// Executes a builtin op. Right now only arithmetic opereations
-pub fn builtin_op<T: Operate>(exprs: &Vec<Expr>, op: &T, env: &Env) -> EvalResult<Expr> {
+pub fn builtin_op<T: Operate>(exprs: &Vec<Expr>, op: &T, env: &mut Env) -> EvalResult<Expr> {
     op.operate(exprs, env)
 }
 
@@ -78,7 +77,7 @@ pub fn builtin_op<T: Operate>(exprs: &Vec<Expr>, op: &T, env: &Env) -> EvalResul
 /// This function effectively walks down the AST, breaking it into individual blocks separated by
 /// the symbol for a group and walks back up by combining the symbol and its operands until only
 /// a single expression is left
-fn eval(exprs: &Vec<Expr>, env: &Env) -> EvalResult<Expr> {
+fn eval(exprs: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr> {
     let mut updated_exp = vec![];
 
     for expr in &*exprs {
@@ -114,7 +113,7 @@ fn eval(exprs: &Vec<Expr>, env: &Env) -> EvalResult<Expr> {
 
 /// First level of expression evaluation. This is a simple match expression which either returns
 /// a single expression or calls `eval` on an sexpression
-pub(crate) fn eval_input(expr: &Expr, env: &Env) -> EvalResult<Expr> {
+pub(crate) fn eval_input(expr: &Expr, env: &mut Env) -> EvalResult<Expr> {
     match *expr {
         Expr::Val(v) => Ok(Expr::Val(v)),
         Expr::Sym(ref v) => match *v {
@@ -139,8 +138,7 @@ fn main() {
         println!("No previous history file");
     }
 
-    let table = SlotMap::new();
-    let mut env = environment::Env { table };
+    let mut env = environment::Env::new();
 
     loop {
         let input = match read_input(&mut rl) {
@@ -151,7 +149,7 @@ fn main() {
             }
         };
 
-        let parsed_val = match parse_input(&input, &mut env) {
+        let parsed_val = match parse_input(&input) {
             Ok(v) => v,
             Err(e) => {
                 println!("Got error: {:?}", e);
@@ -160,7 +158,7 @@ fn main() {
         };
         println!("lispy> {:?}", parsed_val);
 
-        let value = match eval_input(&parsed_val, &env) {
+        let value = match eval_input(&parsed_val, &mut env) {
             Ok(v) => v,
             Err(e) => {
                 println!("Got error: {:?}", e);

@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use ast::{Expr, Lispy, Arith, Number, Symbol, Builtin};
+use ast::{Expr, Lispy, Arith, Number, Symbol, Builtin, Variable};
 
 grammar;
 
@@ -43,8 +43,8 @@ Num: Number = {
     Integral => f64::from_str(<>).unwrap()
 };
 
-Var: String = {
-    Identifier => <>.to_string()
+Var: Variable = {
+    Identifier => Variable {value: <>.to_string()},
 };
 
 match {

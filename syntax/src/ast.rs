@@ -36,11 +36,16 @@ pub enum Builtin {
     Def,
 }
 
+#[derive(Clone, Debug, PartialEq, Hash)]
+pub struct Variable {
+    pub value: String,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Symbol {
     Arith(Arith),
     Builtin(Builtin),
-    Var(String),
+    Var(Variable),
 }
 
 #[derive(Clone, PartialEq)]
