@@ -25,13 +25,13 @@ impl Display for SyntaxError {
     }
 }
 
-pub struct Parser {
-    pub table: SlotMap<String>,
+pub struct Parser<'a> {
+    pub table: &'a mut SlotMap<String>,
     parser: LispyParser,
 }
 
-impl Parser {
-    pub fn new(table: SlotMap<String>) -> Self {
+impl<'a> Parser<'a> {
+    pub fn new(table: &'a mut SlotMap<String>) -> Self {
         Parser {
             table,
             parser: LispyParser::new(),
@@ -52,25 +52,29 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut parser = Parser::new(SlotMap::new());
+        let mut table = SlotMap::new();
+        let mut parser = Parser::new(&mut table);
         assert!(parser.parse("+ 5 8 (* 10 9)").is_ok());
     }
 
     #[test]
     fn sexpr_test() {
-        let mut parser = Parser::new(SlotMap::new());
+        let mut table = SlotMap::new();
+        let mut parser = Parser::new(&mut table);
         assert!(parser.parse("+ 9 (8 37 8)").is_ok());
     }
 
     #[test]
     fn qexpr_test() {
-        let mut parser = Parser::new(SlotMap::new());
+        let mut table = SlotMap::new();
+        let mut parser = Parser::new(&mut table);
         assert!(parser.parse("+ 9 (8 37 8) {9 8 (3 8)}").is_ok());
     }
 
     #[test]
     fn builtin_test() {
-        let mut parser = Parser::new(SlotMap::new());
+        let mut table = SlotMap::new();
+        let mut parser = Parser::new(&mut table);
         assert!(parser.parse("eval (tail {tail tail {5 6 7}})").is_ok());
     }
 }

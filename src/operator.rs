@@ -1,12 +1,14 @@
 use super::{EvalResult, LispyError};
 use syntax::ast::*;
 
+use environment::Env;
+
 pub trait Operate {
-    fn operate(&self, operands: &Vec<Expr>) -> EvalResult<Expr>;
+    fn operate(&self, operands: &Vec<Expr>, env: &Env) -> EvalResult<Expr>;
 }
 
 impl Operate for Arith {
-    fn operate(&self, operands: &Vec<Expr>) -> EvalResult<Expr> {
+    fn operate(&self, operands: &Vec<Expr>, env: &Env) -> EvalResult<Expr> {
         let init_val: Number = match *self {
             Arith::Add => 0.0,
             Arith::Sub => 0.0,
@@ -41,13 +43,13 @@ fn perform_artih_op(op: &Arith, lhs: Number, rhs: Number) -> Number {
 }
 
 impl Operate for Builtin {
-    fn operate(&self, operands: &Vec<Expr>) -> EvalResult<Expr> {
+    fn operate(&self, operands: &Vec<Expr>, env: &Env) -> EvalResult<Expr> {
         match *self {
             Builtin::Head => head(&operands[1..]),
             Builtin::Tail => tail(&operands[1..]),
             Builtin::List => list(&operands[1..]),
             Builtin::Join => join(&operands[1..]),
-            Builtin::Eval => eval(&operands[1..]),
+            Builtin::Eval => eval(&operands[1..], env),
             Builtin::Len => len(&operands[1..]),
         }
     }
@@ -114,7 +116,7 @@ fn join(operands: &[Expr]) -> EvalResult<Expr> {
     Ok(Expr::Qexp(new_expr))
 }
 
-fn eval(operands: &[Expr]) -> EvalResult<Expr> {
+fn eval(operands: &[Expr], env: &Env) -> EvalResult<Expr> {
     if operands.len() > 1 {
         return Err(LispyError::BadOp);
     }
@@ -123,9 +125,9 @@ fn eval(operands: &[Expr]) -> EvalResult<Expr> {
         Expr::Qexp(ref v) => {
             use super::eval_input;
 
-            return eval_input(&Expr::Sexp(v.clone()));
-        },
-        _ => Err(LispyError::BadOp)
+            return eval_input(&Expr::Sexp(v.clone()), env);
+        }
+        _ => Err(LispyError::BadOp),
     }
 }
 
@@ -136,7 +138,7 @@ fn len(operands: &[Expr]) -> EvalResult<Expr> {
 
     match operands[0] {
         Expr::Qexp(ref v) => Ok(Expr::Val(v.len() as Number)),
-        _ => Err(LispyError::BadOp)
+        _ => Err(LispyError::BadOp),
     }
 }
 
@@ -147,10 +149,12 @@ pub fn list(operands: &[Expr]) -> EvalResult<Expr> {
 }
 
 impl Operate for Symbol {
-    fn operate(&self, o: &Vec<Expr>) -> EvalResult<Expr> {
+    fn operate(&self, o: &Vec<Expr>, env: &Env) -> EvalResult<Expr> {
         match *self {
-            Symbol::Arith(v) => v.operate(o),
-            Symbol::Builtin(v) => v.operate(o),
+            Symbol::Arith(v) => v.operate(o, env),
+            Symbol::Builtin(v) => v.operate(o, env),
+            // TODO: handle variables properly
+            Symbol::Var(_) => Ok(Expr::Empty),
         }
     }
 }

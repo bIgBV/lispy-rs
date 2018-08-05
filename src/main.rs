@@ -2,6 +2,7 @@ extern crate rustyline;
 extern crate slotmap;
 extern crate syntax;
 
+mod environment;
 mod operator;
 
 use slotmap::SlotMap;
@@ -16,10 +17,11 @@ use syntax::Parser;
 use std::error;
 use std::fmt;
 
+use environment::Env;
 use operator::Operate;
 
-pub fn parse_input(input: &str, table: SlotMap<String>) -> Result<Expr, String> {
-    match Parser::new(table).parse(input) {
+pub fn parse_input(input: &str, env: &mut Env) -> Result<Expr, String> {
+    match Parser::new(&mut env.table).parse(input) {
         Ok(v) => Ok(v),
         Err(e) => Err(format!("Parse error: {:?}", e)),
     }
@@ -65,8 +67,8 @@ impl error::Error for LispyError {
 pub type EvalResult<T> = std::result::Result<T, LispyError>;
 
 /// Executes a builtin op. Right now only arithmetic opereations
-pub fn builtin_op<T: Operate>(exprs: &Vec<Expr>, op: &T) -> EvalResult<Expr> {
-    op.operate(exprs)
+pub fn builtin_op<T: Operate>(exprs: &Vec<Expr>, op: &T, env: &Env) -> EvalResult<Expr> {
+    op.operate(exprs, env)
 }
 
 /// Main evaluation of our REPL process. The function iterates over all the expressions in an
@@ -76,11 +78,11 @@ pub fn builtin_op<T: Operate>(exprs: &Vec<Expr>, op: &T) -> EvalResult<Expr> {
 /// This function effectively walks down the AST, breaking it into individual blocks separated by
 /// the symbol for a group and walks back up by combining the symbol and its operands until only
 /// a single expression is left
-fn eval(exprs: &Vec<Expr>) -> EvalResult<Expr> {
+fn eval(exprs: &Vec<Expr>, env: &Env) -> EvalResult<Expr> {
     let mut updated_exp = vec![];
 
     for expr in &*exprs {
-        let result = try!(eval_input(expr));
+        let result = try!(eval_input(expr, env));
 
         // Ignore an empty expression, effectively deleting it from the AST
         match result {
@@ -104,7 +106,7 @@ fn eval(exprs: &Vec<Expr>) -> EvalResult<Expr> {
 
     // If the first item is a symbol in the list, then perform the operation for the symbol
     if let Expr::Sym(ref sym) = updated_exp[0] {
-        return builtin_op(&updated_exp, sym);
+        return builtin_op(&updated_exp, sym, env);
     }
 
     unreachable!();
@@ -112,16 +114,18 @@ fn eval(exprs: &Vec<Expr>) -> EvalResult<Expr> {
 
 /// First level of expression evaluation. This is a simple match expression which either returns
 /// a single expression or calls `eval` on an sexpression
-pub(crate) fn eval_input(expr: &Expr) -> EvalResult<Expr> {
+pub(crate) fn eval_input(expr: &Expr, env: &Env) -> EvalResult<Expr> {
     match *expr {
         Expr::Val(v) => Ok(Expr::Val(v)),
         Expr::Sym(ref v) => match *v {
             Symbol::Arith(v) => Ok(Expr::Sym(Symbol::Arith(v))),
             Symbol::Builtin(v) => Ok(Expr::Sym(Symbol::Builtin(v))),
+            Symbol::Var(_) => Ok(Expr::Empty), // TODO: Actual variable handling
         },
-        Expr::Sexp(ref v) => eval(v),
-        Expr::Qexp(_) => Ok(expr.clone()), // TODO: Actual qexp handling
+        Expr::Sexp(ref v) => eval(v, env),
+        Expr::Qexp(_) => Ok(expr.clone()),
         Expr::Empty => Ok(Expr::Empty),
+        Expr::Error => Err(LispyError::BadNum), // TODO: Actual error handling
     }
 }
 
@@ -135,7 +139,8 @@ fn main() {
         println!("No previous history file");
     }
 
-    let mut table = SlotMap::new();
+    let table = SlotMap::new();
+    let mut env = environment::Env { table };
 
     loop {
         let input = match read_input(&mut rl) {
@@ -146,7 +151,7 @@ fn main() {
             }
         };
 
-        let parsed_val = match parse_input(&input, table) {
+        let parsed_val = match parse_input(&input, &mut env) {
             Ok(v) => v,
             Err(e) => {
                 println!("Got error: {:?}", e);
@@ -155,7 +160,7 @@ fn main() {
         };
         println!("lispy> {:?}", parsed_val);
 
-        let value = match eval_input(&parsed_val) {
+        let value = match eval_input(&parsed_val, &env) {
             Ok(v) => v,
             Err(e) => {
                 println!("Got error: {:?}", e);
