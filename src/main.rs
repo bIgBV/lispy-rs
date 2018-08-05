@@ -8,11 +8,9 @@ mod operator;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
-use syntax::ast::Lispy;
 use syntax::ast::{Expr, Symbol};
 use syntax::Parser;
 
-use std::collections::HashMap;
 use std::error;
 use std::fmt;
 

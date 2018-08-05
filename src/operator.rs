@@ -189,12 +189,47 @@ mod tests {
     use super::*;
     use parse_input;
 
+    macro_rules! extract_operands {
+        ($input:expr) => {
+            if let Expr::Sexp(val) = parse_input($input).unwrap() {
+                val
+            } else {
+                panic!("Operand is not an S-expression");
+            }
+        };
+    }
+
+    macro_rules! make_qexp {
+        ( $( $x:expr ),* ) => {
+            {
+                let mut temp = vec![];
+                $(
+                    temp.push(Expr::Val($x as Number));
+                )*
+                Expr::Qexp(temp)
+            }
+        };
+    }
+
+    #[test]
+    fn extract_operands_test() {
+        let ast = extract_operands!("1 2 3");
+        assert_eq!(ast.len(), 3);
+        assert_eq!(ast[0], Expr::Val(1.0 as Number));
+    }
+
+    #[test]
+    fn make_qexp_test() {
+        let exp = make_qexp!(1, 2);
+        if let Expr::Qexp(v) = exp {
+            assert_eq!(v[0], Expr::Val(1.0 as Number));
+        }
+    }
+
     #[test]
     fn head_test() {
-        let ast = parse_input("{1 2 5}").unwrap();
-        let mut vec = vec![];
-        vec.push(Expr::Val(1 as Number));
-        let expected = Expr::Qexp(vec);
+        let ast = extract_operands!("{1 2 5}");
+        let expected = make_qexp!(1);
 
         let result = head(&ast).unwrap();
         assert_eq!(result, expected);
@@ -202,11 +237,8 @@ mod tests {
 
     #[test]
     fn tail_test() {
-        let ast = parse_input("{1 2 5}").unwrap();
-        let mut vec = vec![];
-        vec.push(Expr::Val(2 as Number));
-        vec.push(Expr::Val(5 as Number));
-        let expected = Expr::Qexp(vec);
+        let ast = extract_operands!("{1 2 5}");
+        let expected = make_qexp!(2, 5);
 
         let result = tail(&ast).unwrap();
         assert_eq!(result, expected);
@@ -214,15 +246,10 @@ mod tests {
 
     #[test]
     fn list_test() {
-        let ast = parse_input("1 2 5").unwrap();
-        let mut vec = vec![];
-        vec.push(Expr::Val(1 as Number));
-        vec.push(Expr::Val(2 as Number));
-        vec.push(Expr::Val(5 as Number));
-        let expected = Expr::Qexp(vec);
+        let ast = extract_operands!("1 2 5");
+        let expected = make_qexp!(1, 2, 5);
 
         let result = list(&ast).unwrap();
-
         assert_eq!(result, expected);
     }
 
@@ -246,7 +273,7 @@ mod tests {
 
     #[test]
     fn len_test() {
-        let ast = parse_input("{1 2 3 4 5}").unwrap();
+        let ast = extract_operands!("{1 2 3 4 5}");
         let expected = Expr::Val(5.0 as Number);
 
         let result = len(&ast).unwrap();
@@ -256,13 +283,13 @@ mod tests {
 
     #[test]
     fn define_test() {
-        let ast = parse_input("{x} 100").unwrap();
+        let ast = extract_operands!("{x} 100");
         let expected = Expr::Empty;
 
         let mut env = Env::new();
 
         let result = define(&ast, &mut env).unwrap();
         assert_eq!(expected, result);
-        assert!(env.table.contains_key("x".to_string()));
+        assert!(env.table.contains_key("x"));
     }
 }
