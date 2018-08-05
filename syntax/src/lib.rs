@@ -6,7 +6,6 @@ mod parser;
 pub mod ast;
 
 use parser::LispyParser;
-use slotmap::SlotMap;
 
 use std::error::Error;
 use std::fmt;
@@ -14,7 +13,7 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub enum SyntaxError {
-    ParseError,
+    ParseError(String),
 }
 
 impl Error for SyntaxError {}
@@ -25,23 +24,21 @@ impl Display for SyntaxError {
     }
 }
 
-pub struct Parser<'a> {
-    pub table: &'a mut SlotMap<String>,
+pub struct Parser {
     parser: LispyParser,
 }
 
-impl<'a> Parser<'a> {
-    pub fn new(table: &'a mut SlotMap<String>) -> Self {
+impl Parser {
+    pub fn new() -> Self {
         Parser {
-            table,
             parser: LispyParser::new(),
         }
     }
 
-    pub fn parse(&mut self, input: &str) -> Result<ast::Expr, SyntaxError> {
-        match self.parser.parse(&mut self.table, input) {
+    pub fn parse(&self, input: &str) -> Result<ast::Expr, SyntaxError> {
+        match self.parser.parse(input) {
             Ok(v) => Ok(ast::Expr::Sexp(v)),
-            Err(_v) => Err(SyntaxError::ParseError),
+            Err(v) => Err(SyntaxError::ParseError(format!("{:?}", v).to_owned())),
         }
     }
 }
@@ -52,29 +49,34 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut table = SlotMap::new();
-        let mut parser = Parser::new(&mut table);
+        let parser = Parser::new();
         assert!(parser.parse("+ 5 8 (* 10 9)").is_ok());
     }
 
     #[test]
     fn sexpr_test() {
-        let mut table = SlotMap::new();
-        let mut parser = Parser::new(&mut table);
+        let parser = Parser::new();
         assert!(parser.parse("+ 9 (8 37 8)").is_ok());
     }
 
     #[test]
     fn qexpr_test() {
-        let mut table = SlotMap::new();
-        let mut parser = Parser::new(&mut table);
+        let parser = Parser::new();
         assert!(parser.parse("+ 9 (8 37 8) {9 8 (3 8)}").is_ok());
     }
 
     #[test]
     fn builtin_test() {
-        let mut table = SlotMap::new();
-        let mut parser = Parser::new(&mut table);
+        let parser = Parser::new();
         assert!(parser.parse("eval (tail {tail tail {5 6 7}})").is_ok());
+    }
+
+    #[test]
+    fn variable_test() {
+        let parser = Parser::new();
+        match parser.parse("def {x} 100") {
+            Ok(v) => println!("Result: {:?}", v),
+            Err(e) => panic!("Err: {:?}", e),
+        }
     }
 }

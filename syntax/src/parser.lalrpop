@@ -1,8 +1,7 @@
 use std::str::FromStr;
-use ast::{Expr, Lispy, Arith, Number, Symbol, Builtin, Variable};
-use slotmap::SlotMap;
+use ast::{Expr, Lispy, Arith, Number, Symbol, Builtin};
 
-grammar<'map>(table: &'map mut SlotMap<String>);
+grammar;
 
 pub Lispy: Lispy = {
     <e:Expr*> => <>
@@ -25,7 +24,7 @@ Qexpr: Vec<Expr> = {
 
 Sym: Symbol = {
     "+" => Symbol::Arith(Arith::Add),
-    "=" => Symbol::Arith(Arith::Sub),
+    "-" => Symbol::Arith(Arith::Sub),
     "*" => Symbol::Arith(Arith::Mul),
     "/" => Symbol::Arith(Arith::Div),
     "%" => Symbol::Arith(Arith::Mod),
@@ -35,6 +34,7 @@ Sym: Symbol = {
     "eval" => Symbol::Builtin(Builtin::Eval),
     "join" => Symbol::Builtin(Builtin::Join),
     "len" => Symbol::Builtin(Builtin::Len),
+    "def" => Symbol::Builtin(Builtin::Def),
     <v:Var> => Symbol::Var(<>),
 };
 
@@ -43,16 +43,15 @@ Num: Number = {
     Integral => f64::from_str(<>).unwrap()
 };
 
-Var: Variable = {
-    Identifier => {
-        Variable { key: table.insert(<>.to_string()) }
-    }
+Var: String = {
+    Identifier => <>.to_string()
 };
 
 match {
     r"[0-9]+\.[0-9]+" => Decimal,
     r"[0-9]+" => Integral,
 } else {
+    // Hacky way to handle keywords.
     r"[a-zA-Z0-9_]+" => Identifier,
     _
 }

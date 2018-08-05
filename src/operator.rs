@@ -26,8 +26,11 @@ impl Operate for Arith {
                     return Err(LispyError::BadNum);
                 }
             };
+
+            // TODO: subtraction is completely broken because it iteratively negates the operands
             acc = perform_artih_op(self, acc, val);
         }
+
         Ok(Expr::Val(acc))
     }
 }
