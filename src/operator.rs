@@ -65,10 +65,11 @@ fn define(operands: &[Expr], env: &mut Env) -> EvalResult<Expr> {
             return Err(LispyError::BadOperand);
         }
 
-        for expr in exprs {
+        for (idx, expr) in exprs.iter().enumerate() {
             if let Expr::Sym(Symbol::Var(var)) = expr {
                 // Can we do better than a clone?
-                env.table.insert(var.value.clone(), var.clone());
+                env.table
+                    .insert(var.ident.clone(), operands[idx + 1].clone());
             } else {
                 return Err(LispyError::BadOperand);
             }
@@ -170,17 +171,6 @@ pub fn list(operands: &[Expr]) -> EvalResult<Expr> {
     let mut new_expr = vec![];
     new_expr.extend_from_slice(&operands[..]);
     Ok(Expr::Qexp(new_expr))
-}
-
-impl Operate for Symbol {
-    fn operate(&self, o: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr> {
-        match *self {
-            Symbol::Arith(v) => v.operate(o, env),
-            Symbol::Builtin(v) => v.operate(o, env),
-            // TODO: handle variables properly
-            Symbol::Var(_) => Ok(Expr::Empty),
-        }
-    }
 }
 
 #[cfg(test)]
@@ -291,5 +281,18 @@ mod tests {
         let result = define(&ast, &mut env).unwrap();
         assert_eq!(expected, result);
         assert!(env.table.contains_key("x"));
+        assert_eq!(env.table.get("x").unwrap(), &Expr::Val(100.0 as Number));
+    }
+}
+
+impl Operate for Symbol {
+    fn operate(&self, o: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr> {
+        match *self {
+            Symbol::Arith(v) => v.operate(o, env),
+            Symbol::Builtin(v) => v.operate(o, env),
+            // Variables can't be operated on currently. Their value is just extracted during
+            // evaluation
+            Symbol::Var(_) => Ok(Expr::Empty),
+        }
     }
 }

@@ -38,7 +38,7 @@ pub enum Builtin {
 
 #[derive(Clone, Debug, PartialEq, Hash)]
 pub struct Variable {
-    pub value: String,
+    pub ident: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]

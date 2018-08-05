@@ -117,7 +117,10 @@ pub(crate) fn eval_input(expr: &Expr, env: &mut Env) -> EvalResult<Expr> {
         Expr::Sym(ref v) => match *v {
             Symbol::Arith(v) => Ok(Expr::Sym(Symbol::Arith(v))),
             Symbol::Builtin(v) => Ok(Expr::Sym(Symbol::Builtin(v))),
-            Symbol::Var(_) => Ok(Expr::Empty), // TODO: Actual variable handling
+            Symbol::Var(ref v) => match env.table.get(&v.ident) {
+                Some(value) => Ok(value.clone()),
+                None => Err(LispyError::BadOperand),
+            },
         },
         Expr::Sexp(ref v) => eval(v, env),
         Expr::Qexp(_) => Ok(expr.clone()),
