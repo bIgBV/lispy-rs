@@ -17,7 +17,7 @@ use std::fmt;
 use environment::Env;
 use operator::Operate;
 
-use error::{EvalResult, LispyError};
+use error::{make_error, ErrorKind, EvalResult};
 
 pub fn parse_input(input: &str) -> Result<Expr, String> {
     match Parser::new().parse(input) {
@@ -94,13 +94,19 @@ pub(crate) fn eval_input(expr: &Expr, env: &mut Env) -> EvalResult<Expr> {
             Symbol::Builtin(v) => Ok(Expr::Sym(Symbol::Builtin(v))),
             Symbol::Var(ref v) => match env.table.get(&v.ident) {
                 Some(value) => Ok(value.clone()),
-                None => Err(LispyError::BadOperand),
+                None => Err(make_error(
+                    ErrorKind::EvalError,
+                    format!("Unbound symbol {:?}", v),
+                )),
             },
         },
         Expr::Sexp(ref v) => eval(v, env),
         Expr::Qexp(_) => Ok(expr.clone()),
         Expr::Empty => Ok(Expr::Empty),
-        Expr::Error => Err(LispyError::BadNum), // TODO: Actual error handling
+        Expr::Error => Err(make_error(
+            ErrorKind::ParseError,
+            "A parsing error occurred",
+        )), // TODO: Actual parsing error handling
     }
 }
 

@@ -1,4 +1,3 @@
-use slotmap::Key;
 use std::fmt::{Debug, Error, Formatter};
 
 pub type Number = f64;

@@ -1,10 +1,28 @@
-use error::{EvalResult, LispyError};
+use error::{make_error, ErrorKind, EvalResult};
 use syntax::ast::*;
 
 use environment::Env;
 
+use std::fmt::Display;
+
 pub trait Operate {
     fn operate(&self, operands: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr>;
+
+    fn handle_error<G, X>(kind: ErrorKind, got: G, expected: X) where G: Display, X: Display -> LispyError {
+        let fomat_string = String::from("");
+        match kind {
+            ErrorKind::BadArgument => format_string.push_str(
+                "Funciton '{}' passed incorrect number of arguments.  Got {}, Expected: {}",
+            ),
+            ErrorKind::BadType => format_string.push_str(
+                "Function '{}' passed incorrect type for argument 0.  Got {}, Expected {}",
+            ),
+            // TODO: This is horrible split the enums and make LispyError generic over them
+            _ => format_string.push_str(""),
+        }
+
+        make_error(kind, format!(format_string, self, pair.got, pair.expceted))
+    }
 }
 
 impl Operate for Arith {
@@ -23,7 +41,12 @@ impl Operate for Arith {
             let val = match *x {
                 Expr::Val(v) => v,
                 _ => {
-                    return Err(LispyError::BadNum);
+                    return Err(self.handle_error(
+                        ErrorKind::BadType,
+                            *x,
+                            "Number",
+                        },
+                    ))
                 }
             };
 
@@ -62,7 +85,12 @@ impl Operate for Builtin {
 fn define(operands: &[Expr], env: &mut Env) -> EvalResult<Expr> {
     if let Expr::Qexp(ref exprs) = operands[0] {
         if !(exprs.len() == operands.len() - 1) {
-            return Err(LispyError::BadOperand);
+            return Err(self.handle_error(
+                LispyError::BadArgs,
+                    exprs.len(),
+                    operands.len() - 1,
+                },
+            ));
         }
 
         for (idx, expr) in exprs.iter().enumerate() {
@@ -71,22 +99,43 @@ fn define(operands: &[Expr], env: &mut Env) -> EvalResult<Expr> {
                 env.table
                     .insert(var.ident.clone(), operands[idx + 1].clone());
             } else {
-                return Err(LispyError::BadOperand);
+                return Err(self.handle_error(LispyError::BadType, expr, "Sym::Var"));
             }
         }
         Ok(Expr::Empty)
     } else {
-        Err(LispyError::BadOperand)
+        Err(make_error(
+            LispyError::BadType,
+            format!(
+                "Function 'def' passed incorrect type for argument 0. Got {}, Expected {}",
+                operands[0],
+                Expr::Qexp
+            ),
+        ))
     }
 }
 
 fn head(operands: &[Expr]) -> EvalResult<Expr> {
     if operands.len() == 0 {
-        return Err(LispyError::ListError("Not enough arguments".to_owned()));
+        return Err(make_error(
+            LispyError::BadOperand,
+            format!(
+                "Funciton 'head' passed incorrect number of arguments. Got {}, Expected: {}",
+                operands.len(),
+                1
+            ),
+        ));
     }
 
     if operands.len() > 1 {
-        return Err(LispyError::ListError("Too many arguments".to_owned()));
+        return Err(make_error(
+            LispyError::BadOperand,
+            format!(
+                "Funciton 'head' passed incorrect number of arguments. Got {}, Expected: {}",
+                operands.len(),
+                1
+            ),
+        ));
     }
 
     if let Expr::Qexp(ref v) = operands[0] {
@@ -96,16 +145,37 @@ fn head(operands: &[Expr]) -> EvalResult<Expr> {
         return Ok(Expr::Qexp(qexp));
     }
 
-    Err(LispyError::ListError("Wrong type of argument".to_owned()))
+    Err(make_error(
+        LispyError::BadType,
+        format!(
+            "Function'head' passed incorrect type of argument. Got {:?}, expceted {:?}",
+            operands[0],
+            Expr::Qexp
+        ),
+    ))
 }
 
 fn tail(operands: &[Expr]) -> EvalResult<Expr> {
     if operands.len() == 0 {
-        return Err(LispyError::ListError("Not enough arguments".to_owned()));
+        return Err(make_error(
+            LispyError::BadOperand,
+            format!(
+                "Funciton 'tail' passed incorrect number of arguments. Got {}, Expected: {}",
+                operands.len(),
+                1
+            ),
+        ));
     }
 
     if operands.len() > 1 {
-        return Err(LispyError::ListError("Too many arguments".to_owned()));
+        return Err(make_error(
+            LispyError::BadOperand,
+            format!(
+                "Funciton 'tail' passed incorrect number of arguments. Got {}, Expected: {}",
+                operands.len(),
+                1
+            ),
+        ));
     }
 
     if let Expr::Qexp(ref v) = operands[0] {
@@ -115,7 +185,14 @@ fn tail(operands: &[Expr]) -> EvalResult<Expr> {
         return Ok(Expr::Qexp(qexp));
     }
 
-    Err(LispyError::ListError("Wrong type of argument".to_owned()))
+    Err(make_error(
+        LispyError::BadType,
+        format!(
+            "Function'tail' passed incorrect type of argument. Got {:?}, expceted {:?}",
+            operands[0],
+            Expr::Qexp
+        ),
+    ))
 }
 
 fn join(operands: &[Expr]) -> EvalResult<Expr> {
