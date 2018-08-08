@@ -1,4 +1,4 @@
-use super::{EvalResult, LispyError};
+use error::{EvalResult, LispyError};
 use syntax::ast::*;
 
 use environment::Env;

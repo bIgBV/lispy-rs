@@ -3,6 +3,7 @@ extern crate slotmap;
 extern crate syntax;
 
 mod environment;
+mod error;
 mod operator;
 
 use rustyline::error::ReadlineError;
@@ -11,11 +12,12 @@ use rustyline::Editor;
 use syntax::ast::{Expr, Symbol};
 use syntax::Parser;
 
-use std::error;
 use std::fmt;
 
 use environment::Env;
 use operator::Operate;
+
+use error::{EvalResult, LispyError};
 
 pub fn parse_input(input: &str) -> Result<Expr, String> {
     match Parser::new().parse(input) {
@@ -36,33 +38,6 @@ fn read_input(rl: &mut Editor<()>) -> Result<String, ReadlineError> {
     }
 }
 
-#[derive(Debug)]
-pub enum LispyError {
-    BadOp,
-    BadNum,
-    BadOperand,
-    ListError(String),
-}
-
-impl fmt::Display for LispyError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            LispyError::BadOp => write!(f, "Bad Symbol"),
-            LispyError::BadNum => write!(f, "Bad Number"),
-            LispyError::BadOperand => write!(f, "Bad Operand"),
-            LispyError::ListError(ref v) => write!(f, "{}", v),
-        }
-    }
-}
-
-impl error::Error for LispyError {
-    fn description(&self) -> &str {
-        "REPL error"
-    }
-}
-
-pub type EvalResult<T> = std::result::Result<T, LispyError>;
-
 /// Executes a builtin op. Right now only arithmetic opereations
 pub fn builtin_op<T: Operate>(exprs: &Vec<Expr>, op: &T, env: &mut Env) -> EvalResult<Expr> {
     op.operate(exprs, env)
@@ -79,7 +54,7 @@ fn eval(exprs: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr> {
     let mut updated_exp = vec![];
 
     for expr in &*exprs {
-        let result = try!(eval_input(expr, env));
+        let result = eval_input(expr, env)?;
 
         // Ignore an empty expression, effectively deleting it from the AST
         match result {
