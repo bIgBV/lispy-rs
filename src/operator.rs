@@ -1,27 +1,38 @@
-use error::{make_error, ErrorKind, EvalResult};
+use error::{make_error, ErrorKind, EvalResult, LispyError};
 use syntax::ast::*;
 
 use environment::Env;
 
-use std::fmt::Display;
+use std::fmt::Debug;
 
 pub trait Operate {
     fn operate(&self, operands: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr>;
 
-    fn handle_error<G, X>(kind: ErrorKind, got: G, expected: X) where G: Display, X: Display -> LispyError {
-        let fomat_string = String::from("");
+    fn handle_error<G, X>(&self, kind: ErrorKind, got: G, expected: X) -> LispyError
+    where
+        Self: Debug,
+        G: Debug,
+        X: Debug,
+    {
+        let mut format_string = String::from("");
         match kind {
-            ErrorKind::BadArgument => format_string.push_str(
-                "Funciton '{}' passed incorrect number of arguments.  Got {}, Expected: {}",
-            ),
-            ErrorKind::BadType => format_string.push_str(
-                "Function '{}' passed incorrect type for argument 0.  Got {}, Expected {}",
-            ),
+            ErrorKind::BadArgs => {
+                format_string = format!(
+                "Funciton '{:?}' passed incorrect number of arguments.  Got {:?}, Expected: {:?}",
+                self, got, expected
+            );
+            }
+            ErrorKind::BadType => {
+                format_string = format!(
+                    "Funciton '{:?}' passed incorrect type of argument.  Got {:?}, Expected: {:?}",
+                    self, got, expected
+                );
+            }
             // TODO: This is horrible split the enums and make LispyError generic over them
             _ => format_string.push_str(""),
         }
 
-        make_error(kind, format!(format_string, self, pair.got, pair.expceted))
+        make_error(kind, format_string)
     }
 }
 
@@ -40,14 +51,7 @@ impl Operate for Arith {
         for x in operands[1..].iter() {
             let val = match *x {
                 Expr::Val(v) => v,
-                _ => {
-                    return Err(self.handle_error(
-                        ErrorKind::BadType,
-                            *x,
-                            "Number",
-                        },
-                    ))
-                }
+                _ => return Err(self.handle_error(ErrorKind::BadType, x, "Number")),
             };
 
             // TODO: subtraction is completely broken because it iteratively negates the operands
@@ -71,183 +75,141 @@ fn perform_artih_op(op: &Arith, lhs: Number, rhs: Number) -> Number {
 impl Operate for Builtin {
     fn operate(&self, operands: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr> {
         match *self {
-            Builtin::Head => head(&operands[1..]),
-            Builtin::Tail => tail(&operands[1..]),
-            Builtin::List => list(&operands[1..]),
-            Builtin::Join => join(&operands[1..]),
-            Builtin::Eval => eval(&operands[1..], env),
-            Builtin::Len => len(&operands[1..]),
-            Builtin::Def => define(&operands[1..], env),
+            Builtin::Head => self.head(&operands[1..]),
+            Builtin::Tail => self.tail(&operands[1..]),
+            Builtin::List => self.list(&operands[1..]),
+            Builtin::Join => self.join(&operands[1..]),
+            Builtin::Eval => self.eval(&operands[1..], env),
+            Builtin::Len => self.len(&operands[1..]),
+            Builtin::Def => self.define(&operands[1..], env),
         }
     }
 }
 
-fn define(operands: &[Expr], env: &mut Env) -> EvalResult<Expr> {
-    if let Expr::Qexp(ref exprs) = operands[0] {
-        if !(exprs.len() == operands.len() - 1) {
-            return Err(self.handle_error(
-                LispyError::BadArgs,
-                    exprs.len(),
-                    operands.len() - 1,
-                },
-            ));
+trait BuiltinFuncs {
+    fn head(&self, operands: &[Expr]) -> EvalResult<Expr>;
+    fn tail(&self, operands: &[Expr]) -> EvalResult<Expr>;
+    fn list(&self, operands: &[Expr]) -> EvalResult<Expr>;
+    fn join(&self, operands: &[Expr]) -> EvalResult<Expr>;
+    fn eval(&self, operands: &[Expr], env: &mut Env) -> EvalResult<Expr>;
+    fn len(&self, operands: &[Expr]) -> EvalResult<Expr>;
+    fn define(&self, operands: &[Expr], env: &mut Env) -> EvalResult<Expr>;
+}
+
+impl BuiltinFuncs for Builtin {
+    fn define(&self, operands: &[Expr], env: &mut Env) -> EvalResult<Expr> {
+        if let Expr::Qexp(ref exprs) = operands[0] {
+            if !(exprs.len() == operands.len() - 1) {
+                return Err(self.handle_error(ErrorKind::BadArgs, exprs.len(), operands.len() - 1));
+            }
+
+            for (idx, expr) in exprs.iter().enumerate() {
+                if let Expr::Sym(Symbol::Var(var)) = expr {
+                    // Can we do better than a clone?
+                    env.table
+                        .insert(var.ident.clone(), operands[idx + 1].clone());
+                } else {
+                    return Err(self.handle_error(ErrorKind::BadType, expr, "Sym::Var"));
+                }
+            }
+            Ok(Expr::Empty)
+        } else {
+            Err(self.handle_error(ErrorKind::BadType, &operands[0], "Expr::Qexp"))
+        }
+    }
+
+    fn head(&self, operands: &[Expr]) -> EvalResult<Expr> {
+        if operands.len() == 0 {
+            return Err(self.handle_error(ErrorKind::BadArgs, operands.len(), 1));
         }
 
-        for (idx, expr) in exprs.iter().enumerate() {
-            if let Expr::Sym(Symbol::Var(var)) = expr {
-                // Can we do better than a clone?
-                env.table
-                    .insert(var.ident.clone(), operands[idx + 1].clone());
-            } else {
-                return Err(self.handle_error(LispyError::BadType, expr, "Sym::Var"));
+        if operands.len() > 1 {
+            return Err(self.handle_error(ErrorKind::BadArgs, operands.len(), 1));
+        }
+
+        if let Expr::Qexp(ref v) = operands[0] {
+            let mut qexp = vec![];
+            qexp.push(v[0].clone());
+
+            return Ok(Expr::Qexp(qexp));
+        }
+
+        Err(self.handle_error(ErrorKind::BadType, &operands[0], "Expr::Qexpr"))
+    }
+
+    fn tail(&self, operands: &[Expr]) -> EvalResult<Expr> {
+        if operands.len() == 0 {
+            return Err(self.handle_error(ErrorKind::BadArgs, operands.len(), 1));
+        }
+
+        if operands.len() > 1 {
+            return Err(self.handle_error(ErrorKind::BadArgs, operands.len(), 1));
+        }
+
+        if let Expr::Qexp(ref v) = operands[0] {
+            let mut qexp = vec![];
+            qexp.extend_from_slice(&v[1..]);
+
+            return Ok(Expr::Qexp(qexp));
+        }
+
+        Err(self.handle_error(ErrorKind::BadType, &operands[0], "Expr::Qexpr"))
+    }
+
+    fn join(&self, operands: &[Expr]) -> EvalResult<Expr> {
+        for operand in operands {
+            match operand {
+                Expr::Qexp(_) => continue,
+                _ => {
+                    return Err(self.handle_error(ErrorKind::BadArgs, operand, "Expr::Qexpr"));
+                }
             }
         }
-        Ok(Expr::Empty)
-    } else {
-        Err(make_error(
-            LispyError::BadType,
-            format!(
-                "Function 'def' passed incorrect type for argument 0. Got {}, Expected {}",
-                operands[0],
-                Expr::Qexp
-            ),
-        ))
-    }
-}
 
-fn head(operands: &[Expr]) -> EvalResult<Expr> {
-    if operands.len() == 0 {
-        return Err(make_error(
-            LispyError::BadOperand,
-            format!(
-                "Funciton 'head' passed incorrect number of arguments. Got {}, Expected: {}",
-                operands.len(),
-                1
-            ),
-        ));
-    }
+        let mut new_expr = vec![];
 
-    if operands.len() > 1 {
-        return Err(make_error(
-            LispyError::BadOperand,
-            format!(
-                "Funciton 'head' passed incorrect number of arguments. Got {}, Expected: {}",
-                operands.len(),
-                1
-            ),
-        ));
-    }
-
-    if let Expr::Qexp(ref v) = operands[0] {
-        let mut qexp = vec![];
-        qexp.push(v[0].clone());
-
-        return Ok(Expr::Qexp(qexp));
-    }
-
-    Err(make_error(
-        LispyError::BadType,
-        format!(
-            "Function'head' passed incorrect type of argument. Got {:?}, expceted {:?}",
-            operands[0],
-            Expr::Qexp
-        ),
-    ))
-}
-
-fn tail(operands: &[Expr]) -> EvalResult<Expr> {
-    if operands.len() == 0 {
-        return Err(make_error(
-            LispyError::BadOperand,
-            format!(
-                "Funciton 'tail' passed incorrect number of arguments. Got {}, Expected: {}",
-                operands.len(),
-                1
-            ),
-        ));
-    }
-
-    if operands.len() > 1 {
-        return Err(make_error(
-            LispyError::BadOperand,
-            format!(
-                "Funciton 'tail' passed incorrect number of arguments. Got {}, Expected: {}",
-                operands.len(),
-                1
-            ),
-        ));
-    }
-
-    if let Expr::Qexp(ref v) = operands[0] {
-        let mut qexp = vec![];
-        qexp.extend_from_slice(&v[1..]);
-
-        return Ok(Expr::Qexp(qexp));
-    }
-
-    Err(make_error(
-        LispyError::BadType,
-        format!(
-            "Function'tail' passed incorrect type of argument. Got {:?}, expceted {:?}",
-            operands[0],
-            Expr::Qexp
-        ),
-    ))
-}
-
-fn join(operands: &[Expr]) -> EvalResult<Expr> {
-    for operand in operands {
-        match operand {
-            Expr::Qexp(_) => continue,
-            _ => {
-                return Err(LispyError::BadOperand);
+        for operand in operands {
+            if let Expr::Qexp(v) = operand {
+                for expr in v {
+                    new_expr.push(expr.clone());
+                }
             }
         }
+
+        Ok(Expr::Qexp(new_expr))
     }
 
-    let mut new_expr = vec![];
+    fn eval(&self, operands: &[Expr], env: &mut Env) -> EvalResult<Expr> {
+        if operands.len() > 1 {
+            return Err(self.handle_error(ErrorKind::BadArgs, operands.len(), 1));
+        }
 
-    for operand in operands {
-        if let Expr::Qexp(v) = operand {
-            for expr in v {
-                new_expr.push(expr.clone());
+        match operands[0] {
+            Expr::Qexp(ref v) => {
+                use super::eval_input;
+
+                return eval_input(&Expr::Sexp(v.clone()), env);
             }
+            _ => Err(self.handle_error(ErrorKind::BadType, &operands[0], "Expr::Qexpr")),
         }
     }
 
-    Ok(Expr::Qexp(new_expr))
-}
-
-fn eval(operands: &[Expr], env: &mut Env) -> EvalResult<Expr> {
-    if operands.len() > 1 {
-        return Err(LispyError::BadOp);
-    }
-
-    match operands[0] {
-        Expr::Qexp(ref v) => {
-            use super::eval_input;
-
-            return eval_input(&Expr::Sexp(v.clone()), env);
+    fn len(&self, operands: &[Expr]) -> EvalResult<Expr> {
+        if operands.len() > 1 {
+            return Err(self.handle_error(ErrorKind::BadArgs, operands.len(), 1));
         }
-        _ => Err(LispyError::BadOp),
-    }
-}
 
-fn len(operands: &[Expr]) -> EvalResult<Expr> {
-    if operands.len() > 1 {
-        return Err(LispyError::BadOp);
+        match operands[0] {
+            Expr::Qexp(ref v) => Ok(Expr::Val(v.len() as Number)),
+            _ => Err(self.handle_error(ErrorKind::BadType, &operands[0], "Expr::Qexpr")),
+        }
     }
 
-    match operands[0] {
-        Expr::Qexp(ref v) => Ok(Expr::Val(v.len() as Number)),
-        _ => Err(LispyError::BadOp),
+    fn list(&self, operands: &[Expr]) -> EvalResult<Expr> {
+        let mut new_expr = vec![];
+        new_expr.extend_from_slice(&operands[..]);
+        Ok(Expr::Qexp(new_expr))
     }
-}
-
-pub fn list(operands: &[Expr]) -> EvalResult<Expr> {
-    let mut new_expr = vec![];
-    new_expr.extend_from_slice(&operands[..]);
-    Ok(Expr::Qexp(new_expr))
 }
 
 #[cfg(test)]

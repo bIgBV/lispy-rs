@@ -105,7 +105,7 @@ pub(crate) fn eval_input(expr: &Expr, env: &mut Env) -> EvalResult<Expr> {
         Expr::Empty => Ok(Expr::Empty),
         Expr::Error => Err(make_error(
             ErrorKind::ParseError,
-            "A parsing error occurred",
+            "A parsing error occurred".to_owned(),
         )), // TODO: Actual parsing error handling
     }
 }
