@@ -17,7 +17,7 @@ use std::fmt;
 use environment::Env;
 use operator::Operate;
 
-use error::{make_error, ErrorKind, EvalResult};
+use error::{make_error, EvalResult, LangError};
 
 pub fn parse_input(input: &str) -> Result<Expr, String> {
     match Parser::new().parse(input) {
@@ -72,7 +72,6 @@ fn eval(exprs: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr> {
 
     // A single expression such as (5)
     if updated_exp.len() == 1 {
-        // TODO: should we allow single symbols?
         return Ok(updated_exp.remove(0));
     }
 
@@ -95,7 +94,7 @@ pub(crate) fn eval_input(expr: &Expr, env: &mut Env) -> EvalResult<Expr> {
             Symbol::Var(ref v) => match env.table.get(&v.ident) {
                 Some(value) => Ok(value.clone()),
                 None => Err(make_error(
-                    ErrorKind::EvalError,
+                    LangError::EvalError,
                     format!("Unbound symbol {:?}", v),
                 )),
             },
@@ -104,7 +103,7 @@ pub(crate) fn eval_input(expr: &Expr, env: &mut Env) -> EvalResult<Expr> {
         Expr::Qexp(_) => Ok(expr.clone()),
         Expr::Empty => Ok(Expr::Empty),
         Expr::Error => Err(make_error(
-            ErrorKind::ParseError,
+            LangError::ParseError,
             "A parsing error occurred".to_owned(),
         )), // TODO: Actual parsing error handling
     }

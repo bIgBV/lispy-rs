@@ -1,14 +1,15 @@
-use error::{make_error, ErrorKind, EvalResult, LispyError};
+use error::*;
 use syntax::ast::*;
 
 use environment::Env;
 
+use std::error::Error;
 use std::fmt::Debug;
 
 pub trait Operate {
     fn operate(&self, operands: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr>;
 
-    fn handle_error<G, X>(&self, kind: ErrorKind, got: G, expected: X) -> LispyError
+    fn handle_error<G, X>(&self, kind: ProgramError, got: G, expected: X) -> Box<Error>
     where
         Self: Debug,
         G: Debug,
@@ -16,20 +17,18 @@ pub trait Operate {
     {
         let mut format_string = String::from("");
         match kind {
-            ErrorKind::BadArgs => {
+            ProgramError::BadArgs => {
                 format_string = format!(
                 "Funciton '{:?}' passed incorrect number of arguments.  Got {:?}, Expected: {:?}",
                 self, got, expected
             );
             }
-            ErrorKind::BadType => {
+            ProgramError::BadType => {
                 format_string = format!(
                     "Funciton '{:?}' passed incorrect type of argument.  Got {:?}, Expected: {:?}",
                     self, got, expected
                 );
             }
-            // TODO: This is horrible split the enums and make LispyError generic over them
-            _ => format_string.push_str(""),
         }
 
         make_error(kind, format_string)
@@ -51,7 +50,7 @@ impl Operate for Arith {
         for x in operands[1..].iter() {
             let val = match *x {
                 Expr::Val(v) => v,
-                _ => return Err(self.handle_error(ErrorKind::BadType, x, "Number")),
+                _ => return Err(self.handle_error(ProgramError::BadType, x, "Number")),
             };
 
             // TODO: subtraction is completely broken because it iteratively negates the operands
@@ -100,7 +99,11 @@ impl BuiltinFuncs for Builtin {
     fn define(&self, operands: &[Expr], env: &mut Env) -> EvalResult<Expr> {
         if let Expr::Qexp(ref exprs) = operands[0] {
             if !(exprs.len() == operands.len() - 1) {
-                return Err(self.handle_error(ErrorKind::BadArgs, exprs.len(), operands.len() - 1));
+                return Err(self.handle_error(
+                    ProgramError::BadArgs,
+                    exprs.len(),
+                    operands.len() - 1,
+                ));
             }
 
             for (idx, expr) in exprs.iter().enumerate() {
@@ -109,22 +112,22 @@ impl BuiltinFuncs for Builtin {
                     env.table
                         .insert(var.ident.clone(), operands[idx + 1].clone());
                 } else {
-                    return Err(self.handle_error(ErrorKind::BadType, expr, "Sym::Var"));
+                    return Err(self.handle_error(ProgramError::BadType, expr, "Sym::Var"));
                 }
             }
             Ok(Expr::Empty)
         } else {
-            Err(self.handle_error(ErrorKind::BadType, &operands[0], "Expr::Qexp"))
+            Err(self.handle_error(ProgramError::BadType, &operands[0], "Expr::Qexp"))
         }
     }
 
     fn head(&self, operands: &[Expr]) -> EvalResult<Expr> {
         if operands.len() == 0 {
-            return Err(self.handle_error(ErrorKind::BadArgs, operands.len(), 1));
+            return Err(self.handle_error(ProgramError::BadArgs, operands.len(), 1));
         }
 
         if operands.len() > 1 {
-            return Err(self.handle_error(ErrorKind::BadArgs, operands.len(), 1));
+            return Err(self.handle_error(ProgramError::BadArgs, operands.len(), 1));
         }
 
         if let Expr::Qexp(ref v) = operands[0] {
@@ -134,16 +137,16 @@ impl BuiltinFuncs for Builtin {
             return Ok(Expr::Qexp(qexp));
         }
 
-        Err(self.handle_error(ErrorKind::BadType, &operands[0], "Expr::Qexpr"))
+        Err(self.handle_error(ProgramError::BadType, &operands[0], "Expr::Qexpr"))
     }
 
     fn tail(&self, operands: &[Expr]) -> EvalResult<Expr> {
         if operands.len() == 0 {
-            return Err(self.handle_error(ErrorKind::BadArgs, operands.len(), 1));
+            return Err(self.handle_error(ProgramError::BadArgs, operands.len(), 1));
         }
 
         if operands.len() > 1 {
-            return Err(self.handle_error(ErrorKind::BadArgs, operands.len(), 1));
+            return Err(self.handle_error(ProgramError::BadArgs, operands.len(), 1));
         }
 
         if let Expr::Qexp(ref v) = operands[0] {
@@ -153,7 +156,7 @@ impl BuiltinFuncs for Builtin {
             return Ok(Expr::Qexp(qexp));
         }
 
-        Err(self.handle_error(ErrorKind::BadType, &operands[0], "Expr::Qexpr"))
+        Err(self.handle_error(ProgramError::BadType, &operands[0], "Expr::Qexpr"))
     }
 
     fn join(&self, operands: &[Expr]) -> EvalResult<Expr> {
@@ -161,7 +164,7 @@ impl BuiltinFuncs for Builtin {
             match operand {
                 Expr::Qexp(_) => continue,
                 _ => {
-                    return Err(self.handle_error(ErrorKind::BadArgs, operand, "Expr::Qexpr"));
+                    return Err(self.handle_error(ProgramError::BadArgs, operand, "Expr::Qexpr"));
                 }
             }
         }
@@ -181,7 +184,7 @@ impl BuiltinFuncs for Builtin {
 
     fn eval(&self, operands: &[Expr], env: &mut Env) -> EvalResult<Expr> {
         if operands.len() > 1 {
-            return Err(self.handle_error(ErrorKind::BadArgs, operands.len(), 1));
+            return Err(self.handle_error(ProgramError::BadArgs, operands.len(), 1));
         }
 
         match operands[0] {
@@ -190,18 +193,18 @@ impl BuiltinFuncs for Builtin {
 
                 return eval_input(&Expr::Sexp(v.clone()), env);
             }
-            _ => Err(self.handle_error(ErrorKind::BadType, &operands[0], "Expr::Qexpr")),
+            _ => Err(self.handle_error(ProgramError::BadType, &operands[0], "Expr::Qexpr")),
         }
     }
 
     fn len(&self, operands: &[Expr]) -> EvalResult<Expr> {
         if operands.len() > 1 {
-            return Err(self.handle_error(ErrorKind::BadArgs, operands.len(), 1));
+            return Err(self.handle_error(ProgramError::BadArgs, operands.len(), 1));
         }
 
         match operands[0] {
             Expr::Qexp(ref v) => Ok(Expr::Val(v.len() as Number)),
-            _ => Err(self.handle_error(ErrorKind::BadType, &operands[0], "Expr::Qexpr")),
+            _ => Err(self.handle_error(ProgramError::BadType, &operands[0], "Expr::Qexpr")),
         }
     }
 
