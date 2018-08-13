@@ -36,7 +36,7 @@ pub trait Operate {
 }
 
 impl Operate for Arith {
-    fn operate(&self, operands: &Vec<Expr>, env: &mut Env) -> EvalResult<Expr> {
+    fn operate(&self, operands: &Vec<Expr>, _env: &mut Env) -> EvalResult<Expr> {
         let init_val: Number = match *self {
             Arith::Add => 0.0,
             Arith::Sub => 0.0,
@@ -263,7 +263,7 @@ mod tests {
         let ast = extract_operands!("{1 2 5}");
         let expected = make_qexp!(1);
 
-        let result = head(&ast).unwrap();
+        let result = Builtin::Head.head(&ast).unwrap();
         assert_eq!(result, expected);
     }
 
@@ -272,7 +272,7 @@ mod tests {
         let ast = extract_operands!("{1 2 5}");
         let expected = make_qexp!(2, 5);
 
-        let result = tail(&ast).unwrap();
+        let result = Builtin::Tail.tail(&ast).unwrap();
         assert_eq!(result, expected);
     }
 
@@ -281,7 +281,7 @@ mod tests {
         let ast = extract_operands!("1 2 5");
         let expected = make_qexp!(1, 2, 5);
 
-        let result = list(&ast).unwrap();
+        let result = Builtin::List.list(&ast).unwrap();
         assert_eq!(result, expected);
     }
 
@@ -308,7 +308,7 @@ mod tests {
         let ast = extract_operands!("{1 2 3 4 5}");
         let expected = Expr::Val(5.0 as Number);
 
-        let result = len(&ast).unwrap();
+        let result = Builtin::Len.len(&ast).unwrap();
 
         assert_eq!(result, expected);
     }
@@ -320,7 +320,7 @@ mod tests {
 
         let mut env = Env::new();
 
-        let result = define(&ast, &mut env).unwrap();
+        let result = Builtin::Def.define(&ast, &mut env).unwrap();
         assert_eq!(expected, result);
         assert!(env.table.contains_key("x"));
         assert_eq!(env.table.get("x").unwrap(), &Expr::Val(100.0 as Number));

@@ -12,8 +12,6 @@ use rustyline::Editor;
 use syntax::ast::{Expr, Symbol};
 use syntax::Parser;
 
-use std::fmt;
-
 use environment::Env;
 use operator::Operate;
 
